@@ -975,13 +975,13 @@ function PatternStudioContent() {
             <LoadingScreen isLoading={isLoading} />
 
             {/* ヘッダー */}
-            <header className="relative isolate min-h-[640px] sm:min-h-[450px] overflow-hidden bg-[#7B83A2]">
+            <header className="relative isolate min-h-[460px] h-[68vh] max-h-[540px] sm:min-h-[450px] sm:h-auto overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30 pointer-events-none" />
 
-                {/* モバイル表示 (スマホで女の子イラストを大きく目立たせる構成) */}
-                <div className="flex flex-col items-center justify-between sm:hidden h-full min-h-[640px] pt-6 px-4 relative z-20 overflow-hidden">
+                {/* モバイル表示 (余白をなくし、女の子を上部ロゴ下へ引き上げ大きく見せる) */}
+                <div className="flex flex-col items-center sm:hidden h-full pt-8 px-4 relative z-20 overflow-hidden">
                     <div className="flex flex-col items-center text-center w-full z-20">
-                        <div className="relative h-20 w-[290px] mb-1">
+                        <div className="relative h-18 w-[280px] mb-1">
                             <Image
                                 src="/images/logo-text.png"
                                 alt="Pattern Studio"
@@ -995,16 +995,16 @@ function PatternStudioContent() {
                         </p>
                     </div>
 
-                    {/* 女の子イラスト：高さを 430px → 540px に拡大し、より大きく存在感ある表示に */}
-                    <div className="relative w-full h-[480px] flex justify-center items-end pointer-events-none -mt-4">
+                    {/* 女の子イラスト：下端基準からドッシリと立ち上げ、頭のリボンがロゴ直下まで届くように拡大 */}
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[340px] xs:w-[380px] h-[370px] xs:h-[410px] pointer-events-none flex justify-center items-end">
                         <Image
                             src="/images/header-doll.gif"
                             alt="ドールのイラスト"
-                            width={640}
-                            height={600}
+                            width={580}
+                            height={540}
                             unoptimized
                             priority
-                            className="h-[520px] xs:h-[550px] w-auto max-w-[130%] object-contain object-bottom -mb-1 drop-shadow-[0_12px_24px_rgba(0,0,0,0.35)]"
+                            className="w-full h-full object-contain object-bottom scale-110 origin-bottom drop-shadow-[0_12px_24px_rgba(0,0,0,0.35)]"
                         />
                     </div>
                 </div>
