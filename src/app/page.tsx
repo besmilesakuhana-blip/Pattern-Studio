@@ -974,29 +974,30 @@ function PatternStudioContent() {
         <main className="min-h-screen bg-[#000000] text-white selection:bg-[#9a759c] selection:text-white relative flex flex-col justify-between">
             <LoadingScreen isLoading={isLoading} />
 
-            {/* ヘッダー */}
-            <header className="relative isolate min-h-[460px] h-[68vh] max-h-[540px] sm:min-h-[450px] sm:h-auto overflow-hidden bg-[#7B83A2]">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30 pointer-events-none" />
+            {/* ヘッダー（スマホでアートボード画像と完全一致する構図） */}
+            <header className="relative isolate overflow-hidden bg-[#7B83A2]">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示 (余白をなくし、女の子を上部ロゴ下へ引き上げ大きく見せる) */}
-                <div className="flex flex-col items-center sm:hidden h-full pt-8 px-4 relative z-20 overflow-hidden">
-                    <div className="flex flex-col items-center text-center w-full z-20">
-                        <div className="relative h-18 w-[280px] mb-1">
-                            <Image
-                                src="/images/logo-text.png"
-                                alt="Pattern Studio"
-                                fill
-                                priority
-                                className="object-contain"
-                            />
-                        </div>
-                        <p className="text-xs tracking-[0.2em] text-[#f0edf5] whitespace-nowrap opacity-90">
-                            あなただけの型紙を作る
-                        </p>
+                {/* モバイル表示（アートボード–2の縦横比・近接配置を再現） */}
+                <div className="flex flex-col items-center sm:hidden pt-12 px-4 relative z-20 overflow-hidden">
+                    {/* 1. ロゴ画像 */}
+                    <div className="relative w-[270px] h-[68px]">
+                        <Image
+                            src="/images/logo-text.png"
+                            alt="Pattern Studio"
+                            fill
+                            priority
+                            className="object-contain"
+                        />
                     </div>
 
-                    {/* 女の子イラスト：下端基準からドッシリと立ち上げ、頭のリボンがロゴ直下まで届くように拡大 */}
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[340px] xs:w-[380px] h-[370px] xs:h-[410px] pointer-events-none flex justify-center items-end">
+                    {/* 2. サブタイトル */}
+                    <p className="mt-3 text-[13px] tracking-[0.2em] text-[#f0edf5] whitespace-nowrap opacity-95">
+                        イラストや写真から型紙を作る
+                    </p>
+
+                    {/* 3. 女の子イラスト（サブタイトルの直下に頭のリボンが来る適度な間隔でダイナミックに配置） */}
+                    <div className="relative w-full max-w-[340px] h-[370px] mt-4 flex justify-center items-end pointer-events-none">
                         <Image
                             src="/images/header-doll.gif"
                             alt="ドールのイラスト"
@@ -1004,7 +1005,7 @@ function PatternStudioContent() {
                             height={540}
                             unoptimized
                             priority
-                            className="w-full h-full object-contain object-bottom scale-110 origin-bottom drop-shadow-[0_12px_24px_rgba(0,0,0,0.35)]"
+                            className="w-full h-full object-contain object-bottom -mb-1 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
                         />
                     </div>
                 </div>
