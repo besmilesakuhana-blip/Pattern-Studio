@@ -1,0 +1,31 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Pattern {
+  id            String   @id @default(cuid())
+  title         String   @default("無題の型紙")
+  category      String   // Tシャツ, ワンピース, スカート, ボトムス など
+  size          String   // 10cmぬい, MDD, DD など
+  bust          String?  // DD(M胸) など（トップスのみ）
+  fabricType    String   @default("ニット・伸縮生地")
+  seamAllowance String   @default("5mm")
+  
+  // 寸法・シルエットの数値パラメータ一式（JSON）
+  // length, width, sleeve, sleeveAngle, waistCurve, hemFlare, neckDepth などを格納
+  parameters    Json
+
+  // 端末識別用トークン（ブラウザの localStorage に保持したキーと紐付け）
+  ownerToken    String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ownerToken, category, size])
+}
