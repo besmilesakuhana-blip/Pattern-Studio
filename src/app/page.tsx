@@ -993,7 +993,7 @@ function PatternStudioContent() {
 
                     {/* 2. サブタイトル */}
                     <p className="mt-3 text-[13px] tracking-[0.2em] text-[#f0edf5] whitespace-nowrap opacity-95">
-                        イラストや写真から型紙を作る
+                        あなただけの型紙を作る
                     </p>
 
                     {/* 3. 女の子イラスト（サブタイトルの直下に頭のリボンが来る適度な間隔でダイナミックに配置） */}
