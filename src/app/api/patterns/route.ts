@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 
-// GET: 保存済み型紙の一覧取得 (最新10件) または 単一型紙の取得 (ID指定・共有URL用)
+// GET: 保存済み型紙の一覧取得 (ownerTokenで端末ごとに分離) または 単一型紙の取得 (共有URL用)
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
+        const ownerToken = searchParams.get("ownerToken");
 
-        // 単一型紙の取得 (共有URL・パーマリンク用)
+        // 1. 単一型紙の取得 (共有URL・パーマリンク用：誰でも閲覧可能)
         if (id) {
             const pattern = await prisma.pattern.findUnique({
                 where: { id },
@@ -18,18 +19,23 @@ export async function GET(request: Request) {
             return NextResponse.json(pattern, { status: 200 });
         }
 
-        // 一覧取得
+        // 2. 一覧取得：端末トークンが無い場合は他人の履歴を見せないため空配列を返す
+        if (!ownerToken) {
+            return NextResponse.json([], { status: 200 });
+        }
+
         const category = searchParams.get("category");
         const size = searchParams.get("size");
 
-        const where: Record<string, string> = {};
+        // 自分の端末トークン (ownerToken) に一致するものだけを抽出
+        const where: Record<string, string> = { ownerToken };
         if (category) where.category = category;
         if (size) where.size = size;
 
         const patterns = await prisma.pattern.findMany({
             where,
             orderBy: { createdAt: "desc" },
-            take: 10,
+            take: 20,
         });
 
         return NextResponse.json(patterns, { status: 200 });
@@ -39,14 +45,14 @@ export async function GET(request: Request) {
     }
 }
 
-// POST: パラメータ保存
+// POST: パラメータ保存 (端末トークン ownerToken を紐付けて保存)
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { title, category, size, bust, fabricType, seamAllowance, parameters } = body;
+        const { title, category, size, bust, fabricType, seamAllowance, parameters, ownerToken } = body;
 
-        if (!category || !size || !parameters) {
-            return NextResponse.json({ error: "必須項目が不足しています" }, { status: 400 });
+        if (!category || !size || !parameters || !ownerToken) {
+            return NextResponse.json({ error: "必須項目または端末トークンが不足しています" }, { status: 400 });
         }
 
         const newPattern = await prisma.pattern.create({
@@ -58,6 +64,7 @@ export async function POST(request: Request) {
                 fabricType: fabricType || "ニット・伸縮生地",
                 seamAllowance: seamAllowance || "5mm",
                 parameters,
+                ownerToken, // 端末トークンを保存
             },
         });
 
@@ -68,14 +75,20 @@ export async function POST(request: Request) {
     }
 }
 
-// PATCH: 型紙タイトルの更新（リネーム）
+// PATCH: 型紙タイトルの更新（本人の端末トークンか検証）
 export async function PATCH(request: Request) {
     try {
         const body = await request.json();
-        const { id, title } = body;
+        const { id, title, ownerToken } = body;
 
-        if (!id || !title?.trim()) {
-            return NextResponse.json({ error: "IDおよびタイトル名は必須です" }, { status: 400 });
+        if (!id || !title?.trim() || !ownerToken) {
+            return NextResponse.json({ error: "ID、タイトル、および端末トークンが必要です" }, { status: 400 });
+        }
+
+        // 保存元の端末トークンと一致するか確認
+        const existing = await prisma.pattern.findUnique({ where: { id } });
+        if (!existing || existing.ownerToken !== ownerToken) {
+            return NextResponse.json({ error: "編集権限がありません" }, { status: 403 });
         }
 
         const updatedPattern = await prisma.pattern.update({
@@ -90,14 +103,21 @@ export async function PATCH(request: Request) {
     }
 }
 
-// DELETE: 型紙の削除
+// DELETE: 型紙の削除（本人の端末トークンか検証）
 export async function DELETE(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
+        const ownerToken = searchParams.get("ownerToken");
 
-        if (!id) {
-            return NextResponse.json({ error: "削除するIDが指定されていません" }, { status: 400 });
+        if (!id || !ownerToken) {
+            return NextResponse.json({ error: "削除IDおよび端末トークンが不足しています" }, { status: 400 });
+        }
+
+        // 保存元の端末トークンと一致するか確認
+        const existing = await prisma.pattern.findUnique({ where: { id } });
+        if (!existing || existing.ownerToken !== ownerToken) {
+            return NextResponse.json({ error: "削除権限がありません" }, { status: 403 });
         }
 
         await prisma.pattern.delete({
