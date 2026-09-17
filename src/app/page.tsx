@@ -22,6 +22,17 @@ interface SavedPattern {
     createdAt: string;
 }
 
+// 端末固有トークンの取得または新規生成
+const getOrCreateDeviceToken = (): string => {
+    if (typeof window === "undefined") return "";
+    let token = localStorage.getItem("pattern_studio_device_token");
+    if (!token) {
+        token = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+        localStorage.setItem("pattern_studio_device_token", token);
+    }
+    return token;
+};
+
 function PatternStudioContent() {
     const searchParams = useSearchParams();
 
@@ -262,11 +273,12 @@ function PatternStudioContent() {
         loadPatternById();
     }, [searchParams]);
 
-    // クラウド保存処理
+    // クラウド保存処理 (ownerToken 付与)
     const handleSaveToCloud = async () => {
         try {
             if (isSaving) return;
 
+            const token = getOrCreateDeviceToken();
             const defaultTitle = `${size}の${category} (${new Date().toLocaleDateString("ja-JP")})`;
             const titleToSave = saveTitleInput.trim() || prompt("保存する型紙の名前を入力してください:", defaultTitle);
             
@@ -281,6 +293,7 @@ function PatternStudioContent() {
                 bust: (size === "DD" || size === "MDD") ? bust : null,
                 fabricType,
                 seamAllowance,
+                ownerToken: token, // ★ 端末識別トークン
                 parameters: {
                     length,
                     width,
@@ -323,12 +336,15 @@ function PatternStudioContent() {
         }
     };
 
-    // 履歴モーダルを開いて一覧取得
+    // 履歴モーダルを開いて一覧取得 (ownerToken で絞り込み)
     const handleOpenLoadModal = async () => {
         setIsLoadModalOpen(true);
         setIsLoadingHistory(true);
         try {
-            const res = await fetch(`/api/patterns?category=${encodeURIComponent(category)}&size=${encodeURIComponent(size)}`);
+            const token = getOrCreateDeviceToken();
+            const res = await fetch(
+                `/api/patterns?category=${encodeURIComponent(category)}&size=${encodeURIComponent(size)}&ownerToken=${encodeURIComponent(token)}`
+            );
             if (res.ok) {
                 const data = await res.json();
                 setSavedPatterns(data);
@@ -343,14 +359,15 @@ function PatternStudioContent() {
         }
     };
 
-    // 型紙削除ハンドラー
+    // 型紙削除ハンドラー (ownerToken を付与して検証)
     const handleDeletePattern = async (id: string, title: string) => {
         const ok = window.confirm(`型紙「${title}」を削除してもよろしいですか？\n※この操作は取り消せません。`);
         if (!ok) return;
 
         try {
             setDeletingId(id);
-            const res = await fetch(`/api/patterns?id=${encodeURIComponent(id)}`, {
+            const token = getOrCreateDeviceToken();
+            const res = await fetch(`/api/patterns?id=${encodeURIComponent(id)}&ownerToken=${encodeURIComponent(token)}`, {
                 method: "DELETE",
             });
 
@@ -387,7 +404,7 @@ function PatternStudioContent() {
         setEditingTitleText(currentTitle);
     };
 
-    // リネーム保存ハンドラー
+    // リネーム保存ハンドラー (ownerToken を付与して検証)
     const handleSaveRename = async (id: string) => {
         if (!editingTitleText.trim()) {
             alert("タイトル名を入力してください。");
@@ -396,10 +413,15 @@ function PatternStudioContent() {
 
         try {
             setIsRenaming(true);
+            const token = getOrCreateDeviceToken();
             const res = await fetch("/api/patterns", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id, title: editingTitleText.trim() }),
+                body: JSON.stringify({
+                    id,
+                    title: editingTitleText.trim(),
+                    ownerToken: token,
+                }),
             });
 
             if (!res.ok) {
