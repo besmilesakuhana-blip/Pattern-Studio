@@ -974,11 +974,11 @@ function PatternStudioContent() {
         <main className="min-h-screen bg-[#000000] text-white selection:bg-[#9a759c] selection:text-white relative flex flex-col justify-between">
             <LoadingScreen isLoading={isLoading} />
 
-           {/* ヘッダー */}
+          {/* ヘッダー */}
             <header className="relative isolate overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示（スマホ用の完璧な比率・配置を完全維持） */}
+                {/* モバイル表示（スマホ用レイアウトは完全維持） */}
                 <div className="flex flex-col items-center sm:hidden pt-20 px-4 relative z-20 overflow-hidden">
                     {/* 1. ロゴ画像 */}
                     <div className="relative w-[310px] h-[78px]">
@@ -1010,11 +1010,11 @@ function PatternStudioContent() {
                     </div>
                 </div>
 
-                {/* デスクトップ表示（カンプ画像 Web 1920 - 1 に完全一致：女の子の右隣にロゴと文字を近接配置） */}
+                {/* デスクトップ表示（カンプ Web 1920 - 1 に完全準拠） */}
                 <div className="hidden sm:flex relative w-full h-[460px] lg:h-[500px] justify-center overflow-hidden">
-                    <div className="relative w-full max-w-[1280px] h-full flex items-end px-8 lg:px-16">
-                        {/* 女の子イラスト：左側に大きく配置 */}
-                        <div className="relative z-10 w-[460px] lg:w-[540px] h-[480px] lg:h-[530px] flex items-end shrink-0 -mb-2 pointer-events-none">
+                    <div className="relative w-full max-w-[1400px] h-full flex items-end px-4 lg:px-8">
+                        {/* 1. 女の子イラスト：リボンが上端ギリギリに来る特大サイズ */}
+                        <div className="relative z-10 w-[580px] lg:w-[680px] h-[520px] lg:h-[600px] shrink-0 pointer-events-none -mb-2 flex items-end">
                             <Image
                                 src="/images/header-doll.gif"
                                 alt="ドールのイラスト"
@@ -1022,18 +1022,19 @@ function PatternStudioContent() {
                                 height={540}
                                 unoptimized
                                 priority
-                                className="w-full h-full object-contain object-bottom"
+                                className="w-full h-full object-contain object-bottom scale-110 origin-bottom"
                             />
                         </div>
 
-                        {/* ロゴとサブタイトル：女の子のすぐ右隣（少し重なる位置）に配置 */}
-                        <div className="relative z-20 flex flex-col items-start pb-20 lg:pb-24 -ml-16 lg:-ml-20">
-                            {/* サブタイトル */}
-                            <p className="mb-3 text-sm lg:text-base tracking-[0.25em] text-[#f0edf5] whitespace-nowrap pl-4 opacity-95">
+                        {/* 2. ロゴ＆テキストコンテナ：女の子に大胆に被せる位置配置 */}
+                        <div className="relative z-20 flex flex-col items-start pb-16 lg:pb-20 -ml-44 lg:-ml-56">
+                            {/* サブタイトル：Studioの真上（右寄り）に配置 */}
+                            <p className="self-end mr-12 lg:mr-20 mb-1 text-sm lg:text-base tracking-[0.25em] text-[#f0edf5] whitespace-nowrap opacity-95 font-medium">
                                 あなただけの型紙を作る
                             </p>
-                            {/* ロゴ画像 */}
-                            <div className="relative w-[500px] lg:w-[640px] h-[130px] lg:h-[160px]">
+
+                            {/* ロゴ画像：大きく横に展開 */}
+                            <div className="relative w-[680px] lg:w-[860px] h-[180px] lg:h-[220px]">
                                 <Image
                                     src="/images/logo-text.png"
                                     alt="Pattern Studio"
