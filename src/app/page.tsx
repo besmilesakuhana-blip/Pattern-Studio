@@ -936,7 +936,7 @@ function PatternStudioContent() {
                 return;
             }
 
-            if (needSplitX && !needSplitY) {
+            if (!needSplitX && needSplitY) {
                 const halfW = baseBox.width / 2;
                 renderPieceSlice(pieceNode, pieceName, startX, startY, halfW + padX + overlap, pieceH_mm, "_左(part1)", curSheetW_mm, curSheetH_mm, true, false);
                 setTimeout(() => renderPieceSlice(pieceNode, pieceName, baseBox.x + halfW - overlap, startY, halfW + padX + overlap, pieceH_mm, "_右(part2)", curSheetW_mm, curSheetH_mm, true, isLast), 400);
@@ -978,8 +978,8 @@ function PatternStudioContent() {
             <header className="relative isolate overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示（上端と女の子の間隔を微調整し、中央に美しく収まるレイアウト） */}
-                <div className="flex flex-col items-center sm:hidden pt-20 px-4 relative z-20 overflow-hidden">
+                {/* モバイル表示（上部余白を pt-[110px] に広げてロゴ・文字を約1cm下げ、女の子との間隔を維持） */}
+                <div className="flex flex-col items-center sm:hidden pt-[110px] px-4 relative z-20 overflow-hidden">
                     {/* 1. ロゴ画像 */}
                     <div className="relative w-[310px] h-[78px]">
                         <Image
@@ -996,7 +996,7 @@ function PatternStudioContent() {
                         あなただけの型紙を作る
                     </p>
 
-                    {/* 3. 女の子イラスト（間隔を引き締めるため -mt-5 を適用） */}
+                    {/* 3. 女の子イラスト（サイズ・位置・間隔は完全維持） */}
                     <div className="relative w-[92vw] max-w-[420px] h-[420px] -mt-5 flex justify-center items-end pointer-events-none">
                         <Image
                             src="/images/header-doll.gif"
