@@ -978,7 +978,7 @@ function PatternStudioContent() {
             <header className="relative isolate overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示（上部余白を pt-20 に広げ、上端と女の子の中間へ配置） */}
+                {/* モバイル表示（女の子の位置は固定のまま、ロゴと文字を上部と女の子の中間まで自然に下げる） */}
                 <div className="flex flex-col items-center sm:hidden pt-20 px-4 relative z-20 overflow-hidden">
                     {/* 1. ロゴ画像 */}
                     <div className="relative w-[310px] h-[78px]">
@@ -996,8 +996,8 @@ function PatternStudioContent() {
                         あなただけの型紙を作る
                     </p>
 
-                    {/* 3. 女の子イラスト */}
-                    <div className="relative w-[92vw] max-w-[420px] h-[390px] mt-4 flex justify-center items-end pointer-events-none">
+                    {/* 3. 女の子イラスト（サイズ・配置は動かさず維持） */}
+                    <div className="relative w-[92vw] max-w-[420px] h-[400px] mt-2 flex justify-center items-end pointer-events-none">
                         <Image
                             src="/images/header-doll.gif"
                             alt="ドールのイラスト"
