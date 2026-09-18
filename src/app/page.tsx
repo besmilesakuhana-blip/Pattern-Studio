@@ -7,6 +7,7 @@ import { SelectField, SliderField } from "../components/pattern-studio/UICompone
 import { PatternPreviewSvg } from "../components/pattern-studio/PatternPreviewSvg";
 import { SewingGuideSection } from "../components/pattern-studio/SewingGuideSection";
 import { NoticeSection } from "../components/pattern-studio/NoticeSection";
+import { TutorialSection } from "../components/pattern-studio/TutorialSection";
 import { LoadingScreen } from "../components/pattern-studio/LoadingScreen";
 import { Footer } from "../components/pattern-studio/Footer";
 
@@ -974,11 +975,11 @@ function PatternStudioContent() {
         <main className="min-h-screen bg-[#000000] text-white selection:bg-[#9a759c] selection:text-white relative flex flex-col justify-between">
             <LoadingScreen isLoading={isLoading} />
 
- {/* ヘッダー */}
+            {/* ヘッダー */}
             <header className="relative isolate overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示（スマホ用の比率・配置は完全維持） */}
+                {/* モバイル表示（上部余白 pt-20 でほんのわずかだけ上とロゴの間隔を空け、女の子の位置は完全固定） */}
                 <div className="flex flex-col items-center sm:hidden pt-20 px-4 relative z-20 overflow-hidden">
                     {/* 1. ロゴ画像 */}
                     <div className="relative w-[310px] h-[78px]">
@@ -1010,11 +1011,11 @@ function PatternStudioContent() {
                     </div>
                 </div>
 
-                {/* デスクトップ表示（女の子をさらに拡大し、下部を少しはみ出させて隠す） */}
+                {/* デスクトップ表示（大迫力＆はみ出し＋画面縮小時の fluid 調整） */}
                 <div className="hidden sm:flex relative w-full h-[460px] lg:h-[500px] justify-center overflow-hidden">
                     <div className="relative w-full max-w-[1440px] h-full flex items-end justify-between px-4 md:px-8 lg:px-12">
-                        {/* 1. 女の子イラスト：scale-[1.28] に拡大し、-mb-8 lg:-mb-12 で下端をはみ出させてスカート下部をカット */}
-                        <div className="relative z-10 w-[46vw] max-w-[680px] min-w-[370px] h-full shrink-0 pointer-events-none flex items-end -mb-8 lg:-mb-12">
+                        {/* 1. 女の子イラスト：さらに大きくしつつ下部をはみ出させて隠す */}
+                        <div className="relative z-10 w-[48vw] max-w-[720px] min-w-[390px] h-full shrink-0 pointer-events-none flex items-end -mb-10 lg:-mb-14">
                             <Image
                                 src="/images/header-doll.gif"
                                 alt="ドールのイラスト"
@@ -1022,11 +1023,11 @@ function PatternStudioContent() {
                                 height={540}
                                 unoptimized
                                 priority
-                                className="w-full h-auto max-h-[120%] object-contain object-bottom scale-[1.28] origin-bottom"
+                                className="w-full h-auto max-h-[125%] object-contain object-bottom scale-[1.45] origin-bottom"
                             />
                         </div>
 
-                        {/* 2. ロゴ＆テキスト：画面幅に応じて伸縮し見切れを防止 */}
+                        {/* 2. ロゴ＆テキスト：重なり維持＆自動縮小 */}
                         <div className="relative z-20 flex-1 flex flex-col items-end pb-14 md:pb-16 lg:pb-20 -ml-[14vw] sm:-ml-[10vw] lg:-ml-[12vw]">
                             {/* サブタイトル */}
                             <p className="mr-6 md:mr-10 lg:mr-16 mb-2 text-xs sm:text-sm lg:text-base tracking-[0.25em] text-[#f0edf5] whitespace-nowrap opacity-95 font-medium">
@@ -1625,8 +1626,13 @@ function PatternStudioContent() {
                     </div>
                 </section>
 
+                {/* 使い方（チュートリアル） */}
+                <TutorialSection />
+
+                {/* 縫い方ガイド */}
                 <SewingGuideSection category={category} collarType={collarType} />
 
+                {/* 注意事項 */}
                 <NoticeSection />
             </div>
 
