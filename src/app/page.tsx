@@ -978,8 +978,8 @@ function PatternStudioContent() {
             <header className="relative isolate overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示（上端と女の子の中間にロゴ・文字を中央配置し、女の子との間隔を微小に引き締め） */}
-                <div className="flex flex-col items-center sm:hidden pt-18 px-4 relative z-20 overflow-hidden">
+                {/* モバイル表示（上端と女の子の間隔を微調整し、中央に美しく収まるレイアウト） */}
+                <div className="flex flex-col items-center sm:hidden pt-20 px-4 relative z-20 overflow-hidden">
                     {/* 1. ロゴ画像 */}
                     <div className="relative w-[310px] h-[78px]">
                         <Image
@@ -996,7 +996,7 @@ function PatternStudioContent() {
                         あなただけの型紙を作る
                     </p>
 
-                    {/* 3. 女の子イラスト（間隔をわずかに引き締めるため -mt-5 を設定） */}
+                    {/* 3. 女の子イラスト（間隔を引き締めるため -mt-5 を適用） */}
                     <div className="relative w-[92vw] max-w-[420px] h-[420px] -mt-5 flex justify-center items-end pointer-events-none">
                         <Image
                             src="/images/header-doll.gif"
