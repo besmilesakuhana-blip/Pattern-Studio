@@ -974,11 +974,11 @@ function PatternStudioContent() {
         <main className="min-h-screen bg-[#000000] text-white selection:bg-[#9a759c] selection:text-white relative flex flex-col justify-between">
             <LoadingScreen isLoading={isLoading} />
 
-          {/* ヘッダー */}
+  {/* ヘッダー */}
             <header className="relative isolate overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示（スマホ用レイアウトは完全維持） */}
+                {/* モバイル表示（スマホ用設定は完全維持） */}
                 <div className="flex flex-col items-center sm:hidden pt-20 px-4 relative z-20 overflow-hidden">
                     {/* 1. ロゴ画像 */}
                     <div className="relative w-[310px] h-[78px]">
@@ -1010,11 +1010,11 @@ function PatternStudioContent() {
                     </div>
                 </div>
 
-                {/* デスクトップ表示（カンプ Web 1920 - 1 に完全準拠） */}
+                {/* デスクトップ表示（画面幅に応じて自然に縮小し見切れを防止） */}
                 <div className="hidden sm:flex relative w-full h-[460px] lg:h-[500px] justify-center overflow-hidden">
-                    <div className="relative w-full max-w-[1400px] h-full flex items-end px-4 lg:px-8">
-                        {/* 1. 女の子イラスト：リボンが上端ギリギリに来る特大サイズ */}
-                        <div className="relative z-10 w-[580px] lg:w-[680px] h-[520px] lg:h-[600px] shrink-0 pointer-events-none -mb-2 flex items-end">
+                    <div className="relative w-full max-w-[1440px] h-full flex items-end justify-between px-4 md:px-8 lg:px-12">
+                        {/* 1. 女の子イラスト：比率を維持しながら伸縮 */}
+                        <div className="relative z-10 w-[42vw] max-w-[620px] min-w-[340px] h-full shrink-0 pointer-events-none flex items-end">
                             <Image
                                 src="/images/header-doll.gif"
                                 alt="ドールのイラスト"
@@ -1022,25 +1022,25 @@ function PatternStudioContent() {
                                 height={540}
                                 unoptimized
                                 priority
-                                className="w-full h-full object-contain object-bottom scale-110 origin-bottom"
+                                className="w-full h-auto max-h-[110%] object-contain object-bottom scale-110 origin-bottom"
                             />
                         </div>
 
-                        {/* 2. ロゴ＆テキストコンテナ：女の子に大胆に被せる位置配置 */}
-                        <div className="relative z-20 flex flex-col items-start pb-16 lg:pb-20 -ml-44 lg:-ml-56">
-                            {/* サブタイトル：Studioの真上（右寄り）に配置 */}
-                            <p className="self-end mr-12 lg:mr-20 mb-1 text-sm lg:text-base tracking-[0.25em] text-[#f0edf5] whitespace-nowrap opacity-95 font-medium">
+                        {/* 2. ロゴ＆テキスト：女の子と重なりつつ、画面幅に合わせて自動縮小 */}
+                        <div className="relative z-20 flex-1 flex flex-col items-end pb-14 md:pb-16 lg:pb-20 -ml-[12vw] sm:-ml-[8vw] lg:-ml-[10vw]">
+                            {/* サブタイトル：Studioの真上付近に配置 */}
+                            <p className="mr-6 md:mr-10 lg:mr-16 mb-2 text-xs sm:text-sm lg:text-base tracking-[0.25em] text-[#f0edf5] whitespace-nowrap opacity-95 font-medium">
                                 あなただけの型紙を作る
                             </p>
 
-                            {/* ロゴ画像：大きく横に展開 */}
-                            <div className="relative w-[680px] lg:w-[860px] h-[180px] lg:h-[220px]">
+                            {/* ロゴ画像：画面幅に応じて伸縮し見切れを防止 */}
+                            <div className="relative w-full max-w-[820px] h-[18vw] max-h-[210px] min-h-[100px]">
                                 <Image
                                     src="/images/logo-text.png"
                                     alt="Pattern Studio"
                                     fill
                                     priority
-                                    className="object-contain object-left"
+                                    className="object-contain object-right"
                                 />
                             </div>
                         </div>
