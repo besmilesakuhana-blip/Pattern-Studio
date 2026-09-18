@@ -974,11 +974,11 @@ function PatternStudioContent() {
         <main className="min-h-screen bg-[#000000] text-white selection:bg-[#9a759c] selection:text-white relative flex flex-col justify-between">
             <LoadingScreen isLoading={isLoading} />
 
-  {/* ヘッダー */}
+ {/* ヘッダー */}
             <header className="relative isolate overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示（スマホ用設定は完全維持） */}
+                {/* モバイル表示（スマホ用の比率・配置は完全維持） */}
                 <div className="flex flex-col items-center sm:hidden pt-20 px-4 relative z-20 overflow-hidden">
                     {/* 1. ロゴ画像 */}
                     <div className="relative w-[310px] h-[78px]">
@@ -1010,11 +1010,11 @@ function PatternStudioContent() {
                     </div>
                 </div>
 
-                {/* デスクトップ表示（画面幅に応じて自然に縮小し見切れを防止） */}
+                {/* デスクトップ表示（女の子をさらに拡大し、下部を少しはみ出させて隠す） */}
                 <div className="hidden sm:flex relative w-full h-[460px] lg:h-[500px] justify-center overflow-hidden">
                     <div className="relative w-full max-w-[1440px] h-full flex items-end justify-between px-4 md:px-8 lg:px-12">
-                        {/* 1. 女の子イラスト：比率を維持しながら伸縮 */}
-                        <div className="relative z-10 w-[42vw] max-w-[620px] min-w-[340px] h-full shrink-0 pointer-events-none flex items-end">
+                        {/* 1. 女の子イラスト：scale-[1.28] に拡大し、-mb-8 lg:-mb-12 で下端をはみ出させてスカート下部をカット */}
+                        <div className="relative z-10 w-[46vw] max-w-[680px] min-w-[370px] h-full shrink-0 pointer-events-none flex items-end -mb-8 lg:-mb-12">
                             <Image
                                 src="/images/header-doll.gif"
                                 alt="ドールのイラスト"
@@ -1022,18 +1022,18 @@ function PatternStudioContent() {
                                 height={540}
                                 unoptimized
                                 priority
-                                className="w-full h-auto max-h-[110%] object-contain object-bottom scale-110 origin-bottom"
+                                className="w-full h-auto max-h-[120%] object-contain object-bottom scale-[1.28] origin-bottom"
                             />
                         </div>
 
-                        {/* 2. ロゴ＆テキスト：女の子と重なりつつ、画面幅に合わせて自動縮小 */}
-                        <div className="relative z-20 flex-1 flex flex-col items-end pb-14 md:pb-16 lg:pb-20 -ml-[12vw] sm:-ml-[8vw] lg:-ml-[10vw]">
-                            {/* サブタイトル：Studioの真上付近に配置 */}
+                        {/* 2. ロゴ＆テキスト：画面幅に応じて伸縮し見切れを防止 */}
+                        <div className="relative z-20 flex-1 flex flex-col items-end pb-14 md:pb-16 lg:pb-20 -ml-[14vw] sm:-ml-[10vw] lg:-ml-[12vw]">
+                            {/* サブタイトル */}
                             <p className="mr-6 md:mr-10 lg:mr-16 mb-2 text-xs sm:text-sm lg:text-base tracking-[0.25em] text-[#f0edf5] whitespace-nowrap opacity-95 font-medium">
                                 あなただけの型紙を作る
                             </p>
 
-                            {/* ロゴ画像：画面幅に応じて伸縮し見切れを防止 */}
+                            {/* ロゴ画像 */}
                             <div className="relative w-full max-w-[820px] h-[18vw] max-h-[210px] min-h-[100px]">
                                 <Image
                                     src="/images/logo-text.png"
