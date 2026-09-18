@@ -974,14 +974,14 @@ function PatternStudioContent() {
         <main className="min-h-screen bg-[#000000] text-white selection:bg-[#9a759c] selection:text-white relative flex flex-col justify-between">
             <LoadingScreen isLoading={isLoading} />
 
-            {/* ヘッダー（スマホでアートボード画像と完全一致する構図） */}
+            {/* ヘッダー：スマホでは高さ固定を解除し、中身に合わせてフィット */}
             <header className="relative isolate overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示（アートボード–2の縦横比・近接配置を再現） */}
-                <div className="flex flex-col items-center sm:hidden pt-12 px-4 relative z-20 overflow-hidden">
+                {/* モバイル表示（アートボード–2の近接配置を完全に再現） */}
+                <div className="flex flex-col items-center sm:hidden pt-8 px-4 relative z-20 overflow-hidden">
                     {/* 1. ロゴ画像 */}
-                    <div className="relative w-[270px] h-[68px]">
+                    <div className="relative w-[260px] h-[64px]">
                         <Image
                             src="/images/logo-text.png"
                             alt="Pattern Studio"
@@ -992,12 +992,12 @@ function PatternStudioContent() {
                     </div>
 
                     {/* 2. サブタイトル */}
-                    <p className="mt-3 text-[13px] tracking-[0.2em] text-[#f0edf5] whitespace-nowrap opacity-95">
+                    <p className="mt-2 text-xs tracking-[0.25em] text-[#f0edf5] whitespace-nowrap opacity-95">
                         あなただけの型紙を作る
                     </p>
 
-                    {/* 3. 女の子イラスト（サブタイトルの直下に頭のリボンが来る適度な間隔でダイナミックに配置） */}
-                    <div className="relative w-full max-w-[340px] h-[370px] mt-4 flex justify-center items-end pointer-events-none">
+                    {/* 3. 女の子イラスト：不要な空間を削り、頭のリボンがサブタイトルのすぐ下に来るよう拡大配置 */}
+                    <div className="relative w-[85vw] max-w-[380px] h-[380px] -mt-2 flex justify-center items-end pointer-events-none">
                         <Image
                             src="/images/header-doll.gif"
                             alt="ドールのイラスト"
@@ -1005,7 +1005,7 @@ function PatternStudioContent() {
                             height={540}
                             unoptimized
                             priority
-                            className="w-full h-full object-contain object-bottom -mb-1 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
+                            className="w-full h-full object-contain object-bottom scale-[1.28] origin-bottom -mb-1 drop-shadow-[0_12px_24px_rgba(0,0,0,0.35)]"
                         />
                     </div>
                 </div>
