@@ -293,7 +293,7 @@ function PatternStudioContent() {
                 bust: (size === "DD" || size === "MDD") ? bust : null,
                 fabricType,
                 seamAllowance,
-                ownerToken: token, // ★ 端末識別トークン
+                ownerToken: token,
                 parameters: {
                     length,
                     width,
@@ -978,9 +978,9 @@ function PatternStudioContent() {
             <header className="relative isolate overflow-hidden bg-[#7B83A2]">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/25 pointer-events-none" />
 
-                {/* モバイル表示（ロゴ拡大＋女の子の近接配置） */}
-                <div className="flex flex-col items-center sm:hidden pt-8 px-4 relative z-20 overflow-hidden">
-                    {/* 1. ロゴ画像：幅を 260px → 310px、高さを 64px → 78px に拡大 */}
+                {/* モバイル表示（上部余白を pt-20 に広げ、上端と女の子の中間へ配置） */}
+                <div className="flex flex-col items-center sm:hidden pt-20 px-4 relative z-20 overflow-hidden">
+                    {/* 1. ロゴ画像 */}
                     <div className="relative w-[310px] h-[78px]">
                         <Image
                             src="/images/logo-text.png"
@@ -992,12 +992,12 @@ function PatternStudioContent() {
                     </div>
 
                     {/* 2. サブタイトル */}
-                    <p className="mt-2 text-xs tracking-[0.25em] text-[#f0edf5] whitespace-nowrap opacity-95">
+                    <p className="mt-3 text-xs tracking-[0.25em] text-[#f0edf5] whitespace-nowrap opacity-95">
                         あなただけの型紙を作る
                     </p>
 
                     {/* 3. 女の子イラスト */}
-                    <div className="relative w-[92vw] max-w-[420px] h-[420px] -mt-1 flex justify-center items-end pointer-events-none">
+                    <div className="relative w-[92vw] max-w-[420px] h-[390px] mt-4 flex justify-center items-end pointer-events-none">
                         <Image
                             src="/images/header-doll.gif"
                             alt="ドールのイラスト"
