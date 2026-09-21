@@ -5,7 +5,7 @@ import React, { useState } from "react";
 
 export function NoticeSection() {
     // 開閉状態のステート（初期状態は閉じた状態。開いた状態から始めたい場合は true に変更してください）
-    const [isOpen, setIsOpen] = useState(false);
+   const [isOpen, setIsOpen] = useState(true);
 
     return (
         <section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
