@@ -8,7 +8,7 @@ export function NoticeSection() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <section className="mx-auto max-w-6xl px-6 pb-20 sm:px-10">
+        <section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
             <div className="rounded-xl border border-[#333333] bg-[#0d0d0d] p-6 sm:p-8 shadow-2xl transition-all">
                 {/* 見出し（クリックで開閉可能なボタン化） */}
                 <button

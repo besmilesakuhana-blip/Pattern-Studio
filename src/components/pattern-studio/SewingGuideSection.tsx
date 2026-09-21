@@ -361,7 +361,7 @@ export function SewingGuideSection({ category, collarType }: { category: string;
     const steps = getSteps();
 
     return (
-        <section className="mx-auto max-w-6xl px-6 pb-20 sm:px-10">
+        <section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
             <div className="rounded-xl border border-[#333333] bg-[#0d0d0d] p-6 shadow-2xl">
                 <button
                     type="button"
