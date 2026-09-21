@@ -60474,3 +60474,460 @@ pb-12
 今回の修正で、**「3つのセクションの間隔が揃う」＋「3つとも最初から開いている」**ところまで完成しました。👍
 
 そして、ユーザーさんが先ほど確認された通り、**実際の画面でも注意事項が開いた状態で表示されることまで確認できています。**
+
+
+
+
+
+
+
+
+
+もちろんです！😊
+ここまでの **Pattern Studio の作業内容**を、あとから見返しても分かるように、コードと一緒に整理しておきます。
+
+# Pattern Studio｜ここまでの作業まとめ
+
+今回やったことは、大きく **3つ**です。
+
+1. 3つのセクション間の余白を統一
+2. 3つのセクションを最初から開いた状態に変更
+3. 「ワンピースの縫い方・組み立てガイド」の「見る」表示を他と統一し、スマホでは文字を非表示
+
+---
+
+# ① 3つのセクションの余白を統一
+
+対象はこの3つです。
+
+* Pattern Studio の使い方（チュートリアル）
+* ワンピースの縫い方・組み立てガイド
+* 型紙のご利用に関する注意事項・お願い
+
+もともとセクション下部の余白が、
+
+```tsx
+pb-20
+```
+
+になっていました。
+
+これを、
+
+```tsx
+pb-12
+```
+
+に変更しました。
+
+つまり、
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-20 sm:px-10">
+```
+
+↓
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
+```
+
+です。
+
+### `pb-12` とは
+
+Tailwind CSSの、
+
+```text
+pb = padding-bottom
+```
+
+なので、セクション下側の余白を調整しています。
+
+これによって、3つのセクションの縦方向のすき間が揃いました。
+
+---
+
+# ② 3つとも最初から「開いた状態」に変更
+
+次に、ページを開いたときの状態を揃えました。
+
+## チュートリアル
+
+もともと、
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+```
+
+となっていました。
+
+なので、最初から開いた状態です。
+
+---
+
+## ワンピースの縫い方・組み立てガイド
+
+こちらも、
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+```
+
+です。
+
+これも最初から開いた状態です。
+
+---
+
+## 注意事項
+
+ここだけ最初は、
+
+```tsx
+const [isOpen, setIsOpen] = useState(false);
+```
+
+でした。
+
+そのため、最初は閉じていました。
+
+これを、
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+```
+
+に変更しました。
+
+### 最終状態
+
+3つとも、
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+```
+
+です。
+
+そのため、ページを開いたときに3つとも開いて表示されます。
+
+---
+
+# ③ 「見る」を「開く」に変更
+
+次にスマホで確認したところ、
+
+**ワンピースの縫い方・組み立てガイドだけ**
+
+表示が、
+
+```text
+見る ▼
+```
+
+になっていました。
+
+他のセクションと統一するため、
+
+```text
+開く ▼
+```
+
+に変更しました。
+
+---
+
+# ④ スマホでは「開く・閉じる」を表示しない
+
+さらに、スマホでは、
+
+```text
+見る ▼
+```
+
+という文字が表示されていました。
+
+上と下のセクションでは文字が表示されず、矢印だけだったので、これも統一しました。
+
+最終的に使っているコードはこれです。
+
+```tsx
+<div className="flex items-center space-x-2 text-xs text-neutral-400">
+    <span className="hidden sm:inline">
+        {isOpen ? "閉じる" : "開く"}
+    </span>
+
+    <span className="text-[#c59c52]">
+        {isOpen ? "▲" : "▼"}
+    </span>
+</div>
+```
+
+ここで重要なのが、
+
+```tsx
+hidden sm:inline
+```
+
+です。
+
+---
+
+## PCの場合
+
+`sm`以上では文字が表示されます。
+
+開いているとき：
+
+```text
+閉じる ▲
+```
+
+閉じているとき：
+
+```text
+開く ▼
+```
+
+---
+
+## スマホの場合
+
+`hidden` が効くため、
+
+```text
+▲
+```
+
+または
+
+```text
+▼
+```
+
+だけになります。
+
+つまり、スマホでは、
+
+```text
+閉じる
+開く
+```
+
+の文字は表示されません。
+
+---
+
+# ⑤ 開閉そのものの仕組みは変更していません
+
+クリックして開閉する仕組みは、これまで通りです。
+
+```tsx
+onClick={() => setIsOpen(!isOpen)}
+```
+
+つまり、
+
+```text
+クリック
+   ↓
+isOpen が true ⇄ false
+   ↓
+内容が開く ⇄ 閉じる
+```
+
+です。
+
+今回変更したのは**表示文字とスマホでの表示・非表示だけ**です。
+
+---
+
+# ⑥ 最終的な重要コード
+
+今回の状態をまとめると、`SewingGuideSection.tsx` の重要部分はこのようになります。
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+
+return (
+    <section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
+        <div className="rounded-xl border border-[#333333] bg-[#0d0d0d] p-6 sm:p-8 shadow-2xl">
+
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex items-center justify-between text-left group transition cursor-pointer"
+            >
+
+                {/* タイトル部分 */}
+
+                <div className="flex items-center space-x-2 text-xs text-neutral-400">
+                    <span className="hidden sm:inline">
+                        {isOpen ? "閉じる" : "開く"}
+                    </span>
+
+                    <span className="text-[#c59c52]">
+                        {isOpen ? "▲" : "▼"}
+                    </span>
+                </div>
+
+            </button>
+
+            {isOpen && (
+                <div>
+                    {/* ガイドの内容 */}
+                </div>
+            )}
+
+        </div>
+    </section>
+);
+```
+
+---
+
+# ⑦ `NoticeSection.tsx` の重要部分
+
+注意事項については、
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+```
+
+となっています。
+
+そして余白も、
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
+```
+
+です。
+
+---
+
+# ⑧ `page.tsx` は変更していません
+
+ここも重要です。
+
+`page.tsx` の、
+
+```tsx
+<TutorialSection />
+
+<SewingGuideSection
+    category={category}
+    collarType={collarType}
+/>
+
+<NoticeSection />
+```
+
+という構成はそのままです。
+
+今回の作業で、`page.tsx` を変更する必要はありませんでした。
+
+---
+
+# ⑨ Vercelへの反映
+
+今回の修正後は、GitからVercelへ反映しました。
+
+使用したコマンドはこの3つです。
+
+### ① 変更を登録
+
+```bash
+git add .
+```
+
+### ② コミット
+
+```bash
+git commit -m "fix: sewing guide toggle label"
+```
+
+### ③ GitHubへ送信
+
+```bash
+git push
+```
+
+その後、
+
+```text
+GitHub
+  ↓
+Vercelが自動検知
+  ↓
+Build
+  ↓
+Ready
+  ↓
+公開サイトに反映
+```
+
+という流れです。
+
+今回、**Vercelで手動のRedeployをする必要はありませんでした。**
+
+---
+
+# 現在の完成状態
+
+現在はこの状態です。🎉
+
+### PC
+
+```text
+┌──────────────────────────────┐
+│ Pattern Studio の使い方   閉じる ▲ │
+└──────────────────────────────┘
+
+┌──────────────────────────────┐
+│ ワンピースの縫い方・        閉じる ▲ │
+│ 組み立てガイド                  │
+└──────────────────────────────┘
+
+┌──────────────────────────────┐
+│ 型紙のご利用に関する        閉じる ▲ │
+│ 注意事項・お願い                │
+└──────────────────────────────┘
+```
+
+### スマホ
+
+```text
+┌──────────────────────┐
+│ Pattern Studio の使い方       ▼ │
+└──────────────────────┘
+
+┌──────────────────────┐
+│ ワンピースの縫い方・組み立て   ▼ │
+│ ガイド                       │
+└──────────────────────┘
+
+┌──────────────────────┐
+│ 型紙のご利用に関する注意事項   ▼ │
+└──────────────────────┘
+```
+
+そして、**3つとも最初から開いた状態**です。
+
+---
+
+## 今回変更したポイントだけ一覧にすると
+
+| 内容               | 変更前     | 現在       |
+| ---------------- | ------- | -------- |
+| セクション下余白         | `pb-20` | `pb-12`  |
+| Tutorial初期状態     | `true`  | `true`   |
+| Sewing Guide初期状態 | `true`  | `true`   |
+| Notice初期状態       | `false` | `true`   |
+| Sewing Guide表示   | 「見る」    | 「開く」     |
+| PC表示             | 文字＋矢印   | 文字＋矢印    |
+| スマホ表示            | 「見る」＋矢印 | **矢印のみ** |
+| `page.tsx`       | —       | **変更なし** |
+
+これで、**今回の「3つのアコーディオンの見た目・初期状態・スマホ表示の統一」まで完了**です。👍
