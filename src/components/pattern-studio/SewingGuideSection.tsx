@@ -381,10 +381,14 @@ export function SewingGuideSection({ category, collarType }: { category: string;
                             {category}の縫い方・組み立てガイド（合印・縫い合わせ箇所付き）
                         </h2>
                     </div>
-                    <div className="flex items-center space-x-2 text-xs text-neutral-400">
-                        <span>{isOpen ? "閉じる" : "見る"}</span>
-                        <span className="text-[#c59c52]">{isOpen ? "▲" : "▼"}</span>
-                    </div>
+                   <div className="flex items-center space-x-2 text-xs text-neutral-400">
+    <span className="hidden sm:inline">
+        {isOpen ? "閉じる" : "開く"}
+    </span>
+    <span className="text-[#c59c52]">
+        {isOpen ? "▲" : "▼"}
+    </span>
+</div>
                 </button>
 
                 {isOpen && (

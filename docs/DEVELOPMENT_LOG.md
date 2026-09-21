@@ -59695,3 +59695,782 @@ git commit -m "style: scale up desktop doll image with bleed and fluid responsiv
 git push origin main
 
 ```
+
+
+
+
+
+
+
+
+もちろんです！🙆‍♀️
+ここまでの **Pattern Studio の作業内容**を、あとから見返しても分かるように、**「何をしたか → どこを変更したか → Vercelへ反映する方法」**の順でまとめます。
+
+---
+
+# Pattern Studio｜ここまでの作業まとめ
+
+## 1. 今回直した部分
+
+画面には、次の3つのセクションがあります。
+
+1. **Pattern Studio の使い方（チュートリアル）**
+2. **ワンピースの縫い方・組み立てガイド（合印・縫い合わせ箇所付き）**
+3. **型紙のご利用に関する注意事項・お願い**
+
+この3つのボックスについて、
+
+> ボックス同士の縦方向の間隔がバラバラ
+
+という状態になっていました。
+
+確認したところ、ボックス自体の高さが原因ではなく、**各セクションの下側の余白（padding-bottom）**が違っていることが原因でした。
+
+---
+
+# 2. 修正したコード
+
+Tailwind CSS の
+
+```text
+pb-20
+```
+
+を
+
+```text
+pb-12
+```
+
+に統一しました。
+
+### `pb-20` → `pb-12`
+
+これは、
+
+* `pb-20` = 下側の余白 約80px
+* `pb-12` = 下側の余白 約48px
+
+という違いです。
+
+そのため、3つのセクションの間隔を **約48pxで統一**しました。
+
+---
+
+## 3. `SewingGuideSection.tsx`
+
+変更前：
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-20 sm:px-10">
+```
+
+変更後：
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
+```
+
+---
+
+## 4. `NoticeSection.tsx`
+
+こちらも同じです。
+
+変更前：
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-20 sm:px-10">
+```
+
+変更後：
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
+```
+
+---
+
+## 5. `TutorialSection.tsx`
+
+ここも同じ考え方で、
+
+```tsx
+pb-20
+```
+
+を
+
+```tsx
+pb-12
+```
+
+に統一しました。
+
+つまり、3つとも最終的には、
+
+```tsx
+pb-12
+```
+
+を使って、セクション間の縦方向の余白を揃える形です。
+
+---
+
+# 6. `page.tsx` は変更しない
+
+今回の修正では、`page.tsx` は触る必要がありません。
+
+`page.tsx`では、3つのコンポーネントを順番に呼び出しています。
+
+```tsx
+<TutorialSection />
+
+<SewingGuideSection
+  category={category}
+  collarType={collarType}
+/>
+
+<NoticeSection />
+```
+
+つまり、
+
+```text
+page.tsx
+   ↓
+TutorialSection
+   ↓
+SewingGuideSection
+   ↓
+NoticeSection
+```
+
+という構成です。
+
+今回のような**各セクションの余白調整は、それぞれのコンポーネント側で行う**のが適切でした。
+
+---
+
+# 7. 今回の修正で触ったところ
+
+今回の変更はかなり限定的です。
+
+### 変更したもの
+
+```text
+TutorialSection.tsx
+SewingGuideSection.tsx
+NoticeSection.tsx
+```
+
+### 変更内容
+
+```text
+pb-20
+↓
+pb-12
+```
+
+### 変更していないもの
+
+```text
+page.tsx
+その他のレイアウト
+アコーディオンの動作
+ボックスのデザイン
+文字
+画像
+ボタン
+各セクションの内容
+```
+
+なので、今回の修正は**「3つのセクションの余白を揃える」ことに限定した変更**です。
+
+---
+
+# 8. 修正後のイメージ
+
+最終的には、
+
+```text
+┌──────────────────────────────┐
+│ Pattern Studio の使い方       │
+│ （チュートリアル）             │
+└──────────────────────────────┘
+              ↓
+            余白
+              ↓
+┌──────────────────────────────┐
+│ ワンピースの縫い方・           │
+│ 組み立てガイド                 │
+└──────────────────────────────┘
+              ↓
+            余白
+              ↓
+┌──────────────────────────────┐
+│ 型紙のご利用に関する           │
+│ 注意事項・お願い               │
+└──────────────────────────────┘
+```
+
+というように、**上下の間隔が揃った状態**になりました。👍
+
+---
+
+# 9. Vercelに反映する方法
+
+ローカルで修正しただけでは、本番のVercelにはまだ反映されません。
+
+Git連携している場合は、基本的には
+
+```bash
+git add .
+```
+
+↓
+
+```bash
+git commit -m "fix: accordion spacing"
+```
+
+↓
+
+```bash
+git push
+```
+
+です。
+
+まとめると、
+
+```bash
+git add .
+git commit -m "fix: accordion spacing"
+git push
+```
+
+これでGitへ変更が送られます。
+
+Vercel側でGit連携が設定されていれば、**pushをきっかけに自動でBuild・Deploy**されます。
+
+---
+
+# 10. Vercelで確認
+
+Vercelのプロジェクトを開いて、
+
+```text
+Project
+ ↓
+Deployments
+```
+
+を開きます。
+
+新しいDeploymentが作られて、
+
+```text
+Building
+```
+
+↓
+
+```text
+Ready
+```
+
+となればデプロイ完了です。
+
+その後、本番サイトを開いて、
+
+**3つのボックスの間隔が揃っているか**
+
+を確認します。
+
+---
+
+# 11. もし自動デプロイされなかった場合
+
+Vercelの
+
+```text
+Project
+ ↓
+Deployments
+ ↓
+対象のDeployment
+ ↓
+「…」
+ ↓
+Redeploy
+```
+
+から手動で再デプロイできます。
+
+---
+
+## 今回の作業を一言でまとめると
+
+```text
+【修正前】
+
+TutorialSection      pb-20
+        ↓
+SewingGuideSection   pb-20
+        ↓
+NoticeSection        pb-20
+
+        ↓
+
+【余白を統一】
+
+3つのセクションを pb-12 に統一
+
+        ↓
+
+【結果】
+
+3つのボックスの縦方向の間隔が揃った
+```
+
+そして本番反映は、
+
+```bash
+git add .
+git commit -m "fix: accordion spacing"
+git push
+```
+
+→ **Vercelが自動Build・Deploy**
+
+という流れです。
+
+なお、VercelのGit連携では、Gitへのpushに応じてデプロイが作成される仕組みになっています。手動の場合はVercelのDeploymentsからRedeployできます。
+
+これを今回の **Pattern Studioの作業記録**として残しておけば、次に修正するときも「どこを触ったか」がすぐ分かります。
+
+
+
+
+
+
+
+
+
+もちろんです！😊
+ここまでの作業を、**「何を変更したのか」「どのコードを変更したのか」「変更しなかった部分」**が後から見ても分かるように、一度まとめます。
+
+# Pattern Studio｜ここまでの変更まとめ
+
+今回の作業は、大きく **2つ** です。
+
+1. 3つのセクション間の「縦のすき間」を揃えた
+2. 3つの折りたたみセクションを、最初から「開いた状態」にした
+
+---
+
+## ① 3つのセクションの縦のすき間を統一
+
+対象となったのは、この3つです。
+
+* 「Pattern Studio の使い方（チュートリアル）」
+* 「ワンピースの縫い方・組み立てガイド（合印・縫い合わせ箇所付き）」
+* 「型紙のご利用に関する注意事項・お願い」
+
+最初はセクションごとに下側の余白が違っていたため、見た目のすき間が不揃いになっていました。
+
+### 変更前
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-20 sm:px-10">
+```
+
+この `pb-20` が大きめの余白になっていました。
+
+### 変更後
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
+```
+
+つまり、
+
+```text
+pb-20
+↓
+pb-12
+```
+
+に変更しました。
+
+### `pb-12` の意味
+
+Tailwind CSSでは、
+
+```text
+pb = padding-bottom
+```
+
+なので、
+
+```tsx
+pb-12
+```
+
+は「セクションの下側の余白を少し小さくする」という意味です。
+
+これによって、3つのセクションの間隔が揃いました。
+
+---
+
+# ② 3つのセクションを最初から開いた状態に変更
+
+次に確認したところ、
+
+* チュートリアル → 開いている
+* 縫い方・組み立てガイド → 開いている
+* 注意事項 → 閉じている
+
+という状態でした。
+
+原因は `NoticeSection.tsx` の初期値でした。
+
+---
+
+## ③ `SewingGuideSection.tsx` はもともと「開く」設定
+
+現在のコードでは、
+
+```tsx
+export function SewingGuideSection({
+    category,
+    collarType
+}: {
+    category: string;
+    collarType: string;
+}) {
+    const [isOpen, setIsOpen] = useState(true);
+```
+
+となっています。
+
+重要なのはここです。
+
+```tsx
+useState(true)
+```
+
+`true`なので、ページを開いたときから表示されます。
+
+つまり、**ここは変更する必要ありませんでした。**
+
+---
+
+# ④ `NoticeSection.tsx` を「最初から開く」に変更
+
+今回実際に変更した重要な部分はこちらです。
+
+### 変更前
+
+```tsx
+const [isOpen, setIsOpen] = useState(false);
+```
+
+`false`なので、最初は閉じた状態でした。
+
+### 変更後
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+```
+
+これで、ページを開いた瞬間から注意事項の中身が表示されます。
+
+---
+
+## 最終的な `NoticeSection.tsx` の重要部分
+
+```tsx
+"use client";
+
+import Image from "next/image";
+import React, { useState } from "react";
+
+export function NoticeSection() {
+    // 初期状態を「開く」に設定
+    const [isOpen, setIsOpen] = useState(true);
+
+    return (
+        <section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
+            <div className="rounded-xl border border-[#333333] bg-[#0d0d0d] p-6 sm:p-8 shadow-2xl transition-all">
+
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="w-full flex items-center justify-between text-left group transition cursor-pointer"
+                >
+                    <div className="flex items-center space-x-3">
+                        <div className="relative h-6 w-6 flex-shrink-0">
+                            <Image
+                                src="/images/tiisaibara.png"
+                                alt=""
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
+
+                        <h2 className="font-serif text-base tracking-[0.2em] text-[#e4bf70] sm:text-lg">
+                            型紙のご利用に関する注意事項・お願い
+                        </h2>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                        <span className="text-xs text-neutral-400 hidden sm:inline">
+                            {isOpen ? "閉じる" : "開く"}
+                        </span>
+
+                        <span
+                            className={`text-xs text-[#e4bf70] transition-transform duration-300 ${
+                                isOpen ? "rotate-180" : "rotate-0"
+                            }`}
+                        >
+                            ▼
+                        </span>
+                    </div>
+                </button>
+
+                {isOpen && (
+                    <div className="mt-6 border-t border-[#262626] pt-6 transition-all duration-300">
+
+                        {/* 注意事項の内容 */}
+
+                    </div>
+                )}
+            </div>
+        </section>
+    );
+}
+```
+
+ポイントは、**今回の目的に必要だった変更はこの2箇所**です。
+
+```tsx
+pb-20
+```
+
+↓
+
+```tsx
+pb-12
+```
+
+そして、
+
+```tsx
+useState(false)
+```
+
+↓
+
+```tsx
+useState(true)
+```
+
+---
+
+# ⑤ `page.tsx` は変更していません
+
+ここは大事です。
+
+`page.tsx` では、それぞれのセクションを呼び出しています。
+
+```tsx
+<TutorialSection />
+
+<SewingGuideSection
+    category={category}
+    collarType={collarType}
+/>
+
+<NoticeSection />
+```
+
+この部分自体を変更する必要はありませんでした。
+
+つまり、
+
+```text
+page.tsx
+   ↓
+TutorialSection
+   ↓
+SewingGuideSection
+   ↓
+NoticeSection
+```
+
+という構造はそのままです。
+
+---
+
+# ⑥ 最終的な状態
+
+現在、ページを開いたときはこの状態です。
+
+```text
+┌────────────────────────────────────┐
+│ Pattern Studio の使い方             │
+│                                    │
+│        内容が表示されている         │
+│                                    │
+└────────────────────────────────────┘
+                 ↓
+            統一された余白
+                 ↓
+┌────────────────────────────────────┐
+│ ワンピースの縫い方・組み立てガイド   │
+│                                    │
+│        内容が表示されている         │
+│                                    │
+└────────────────────────────────────┘
+                 ↓
+            統一された余白
+                 ↓
+┌────────────────────────────────────┐
+│ 型紙のご利用に関する注意事項・お願い │
+│                                    │
+│        内容が表示されている         │
+│                                    │
+└────────────────────────────────────┘
+```
+
+そして、それぞれの見出しをクリックすれば、
+
+```tsx
+onClick={() => setIsOpen(!isOpen)}
+```
+
+によって、
+
+**開く ⇄ 閉じる**
+
+を切り替えられます。
+
+---
+
+# 今回変更したファイル
+
+整理すると、今回触ったのは主に以下です。
+
+### `src/components/pattern-studio/TutorialSection.tsx`
+
+セクション下部の余白を調整。
+
+```tsx
+pb-20
+```
+
+↓
+
+```tsx
+pb-12
+```
+
+### `src/components/pattern-studio/SewingGuideSection.tsx`
+
+セクション下部の余白を調整。
+
+```tsx
+pb-20
+```
+
+↓
+
+```tsx
+pb-12
+```
+
+初期状態については、
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+```
+
+のままでOK。
+
+### `src/components/pattern-studio/NoticeSection.tsx`
+
+下部余白を調整。
+
+```tsx
+pb-20
+```
+
+↓
+
+```tsx
+pb-12
+```
+
+さらに初期状態を、
+
+```tsx
+const [isOpen, setIsOpen] = useState(false);
+```
+
+↓
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+```
+
+に変更。
+
+### `src/app/page.tsx`
+
+**今回の作業では変更なし。**
+
+---
+
+## 最終的に覚えておけばいいコード
+
+今後、もし「最初は閉じた状態に戻したい」となった場合は、
+
+```tsx
+useState(true)
+```
+
+を
+
+```tsx
+useState(false)
+```
+
+に戻せばOKです。
+
+逆に、
+
+**「最初から開いていてほしい」**
+
+なら、
+
+```tsx
+useState(true)
+```
+
+です。
+
+また、セクション間の余白については、
+
+```tsx
+pb-12
+```
+
+を基準にしています。
+
+---
+
+今回の修正で、**「3つのセクションの間隔が揃う」＋「3つとも最初から開いている」**ところまで完成しました。👍
+
+そして、ユーザーさんが先ほど確認された通り、**実際の画面でも注意事項が開いた状態で表示されることまで確認できています。**
