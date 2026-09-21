@@ -1626,6 +1626,9 @@ function PatternStudioContent() {
                     </div>
                 </section>
 
+                {/* 下部ガイドエリア */}
+<div className="space-y-8"></div>
+
                 {/* 使い方（チュートリアル） */}
                 <TutorialSection />
 
