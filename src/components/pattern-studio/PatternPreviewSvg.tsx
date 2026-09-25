@@ -398,13 +398,32 @@ export function PatternPreviewSvg({
                 }
             `}</style>
 
-            {!isOverlayMode && (
-                <defs>
-                    <pattern id="patternGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#ececec" strokeWidth="0.8" />
-                    </pattern>
-                </defs>
-            )}
+          {!isOverlayMode && (
+    <defs>
+        <pattern
+            id="patternGrid"
+            width="10"
+            height="10"
+            patternUnits="userSpaceOnUse"
+        >
+            <path
+                d="M 10 0 L 0 0 0 10"
+                fill="none"
+                stroke="#ececec"
+                strokeWidth="0.5"
+            />
+        </pattern>
+    </defs>
+)}
+
+{!isOverlayMode && (
+    <rect
+        width="100%"
+        height="100%"
+        fill="url(#patternGrid)"
+        className="pattern-grid-rect"
+    />
+)}
             {!isOverlayMode && <rect width="100%" height="100%" fill="url(#patternGrid)" className="pattern-grid-rect" />}
 
             {isOverlayMode ? (
