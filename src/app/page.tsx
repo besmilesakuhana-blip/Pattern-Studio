@@ -700,29 +700,35 @@ function PatternStudioContent() {
                             print-color-adjust: exact;
                         }
                         .sheet-page {
-                            width: 100%;
-                            min-height: 270mm;
-                            page-break-after: always;
-                            break-after: page;
-                            position: relative;
-                        }
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    page-break-after: always;
+    break-after: page;
+    position: relative;
+    overflow: hidden;
+}
                         .sheet-page:last-child {
                             page-break-after: auto;
                             break-after: auto;
                         }
-                        .sheet-header {
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: flex-end;
-                            border-bottom: 2px solid #333;
-                            padding-bottom: 5px;
-                            margin-bottom: 10px;
-                        }
+                     .sheet-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 5mm;
+    border-bottom: 2px solid #333;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
                         .title { font-size: 14px; font-weight: bold; }
                         .meta { font-size: 10px; color: #555; }
                         .scale-box {
                             width: 30mm;
                             height: 30mm;
+                              min-width: 30mm;
+                                 flex-shrink: 0;
                             border: 1.5px solid #000;
                             display: flex;
                             flex-direction: column;
