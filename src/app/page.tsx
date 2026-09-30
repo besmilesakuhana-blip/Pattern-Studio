@@ -492,7 +492,7 @@ function PatternStudioContent() {
             sheetH_mm = 364;
         }
 
-        const margin_mm = 10;
+        const margin_mm = 12;
         const printAreaTop_mm = 32;
 
         const flatPiecesGroup = svgEl.querySelector("#flat-pattern-pieces") as SVGGraphicsElement;
@@ -687,7 +687,7 @@ function PatternStudioContent() {
                     <style>
                         @page {
                             size: ${paperOption.includes("A3") ? "A3" : paperOption.includes("B4") ? "B4" : "A4"} portrait;
-                            margin: 10mm;
+                            margin: 12mm;
                         }
                         * { box-sizing: border-box; }
                         body {
