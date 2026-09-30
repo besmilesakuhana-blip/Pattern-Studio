@@ -424,8 +424,7 @@ export function PatternPreviewSvg({
         className="pattern-grid-rect"
     />
 )}
-            {!isOverlayMode && <rect width="100%" height="100%" fill="url(#patternGrid)" className="pattern-grid-rect" />}
-
+          
             {isOverlayMode ? (
                 <g id="finished-clothing-silhouette">
                     {isAnyTop && (

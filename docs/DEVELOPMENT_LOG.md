@@ -60931,3 +60931,349 @@ Ready
 | `page.tsx`       | —       | **変更なし** |
 
 これで、**今回の「3つのアコーディオンの見た目・初期状態・スマホ表示の統一」まで完了**です。👍
+
+
+
+
+
+
+
+
+
+
+はい、ここで一度まとめておくのは良いタイミングです。今回の印刷写真を見る限り、**10cmぬいの3パーツがA4 1枚にまとまり、30mm × 30mm確認枠も右端で切れずに印刷できるところまで到達**しています。
+
+## Pattern Studio｜ここまでの作業まとめ
+
+### 1. アコーディオンの余白調整
+
+各セクション間の余白が揃っていなかったため、
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-20 sm:px-10">
+```
+
+を、
+
+```tsx
+<section className="mx-auto max-w-6xl px-6 pb-12 sm:px-10">
+```
+
+へ変更しました。
+
+これで、
+
+「Pattern Studio の使い方」  
+「ワンピースの縫い方・組み立てガイド」  
+「型紙のご利用に関する注意事項・お願い」
+
+の間隔を揃えています。
+
+---
+
+### 2. 3つのアコーディオンを最初から開く
+
+初期状態を、
+
+```tsx
+const [isOpen, setIsOpen] = useState(false);
+```
+
+から、
+
+```tsx
+const [isOpen, setIsOpen] = useState(true);
+```
+
+へ変更。
+
+これでページを開いたときから内容が表示されます。
+
+開閉処理はそのままです。
+
+```tsx
+onClick={() => setIsOpen(!isOpen)}
+```
+
+---
+
+### 3. Sewing Guideの「見る」を修正
+
+PCでは、
+
+```text
+閉じる ▲
+開く ▼
+```
+
+スマートフォンでは矢印だけになるようにしました。
+
+```tsx
+<span className="hidden sm:inline">
+    {isOpen ? "閉じる" : "開く"}
+</span>
+
+<span className="text-[#c59c52]">
+    {isOpen ? "▲" : "▼"}
+</span>
+```
+
+`hidden sm:inline` によって、スマートフォンでは文字を非表示にしています。
+
+---
+
+### 4. ヘッダーGIFをループ再生
+
+`header-doll.gif` を新しいGIFへ差し替えました。
+
+ファイル名は変更せず、
+
+```tsx
+src="/images/header-doll.gif"
+```
+
+のままです。
+
+GIFそのものを**無限ループ（Loop Forever）**に設定したので、Next.js側の追加コードは不要でした。
+
+---
+
+# 5. 型紙の印刷処理
+
+ここが今回かなり重要な部分です。
+
+現在 `page.tsx` では、型紙の印刷/PDF出力処理を行っています。
+
+用紙は基本A4で、
+
+```tsx
+let sheetW_mm = 210;
+let sheetH_mm = 297;
+```
+
+A3/B4も選択できます。現在の印刷処理では余白を10mmに戻しています。:chatgpt-content-reference{index="0"}
+
+```tsx
+const margin_mm = 10;
+const printAreaTop_mm = 32;
+```
+
+---
+
+### 6. 小さい型紙をA4 1枚にまとめる
+
+10cmぬい・ねんどろいどどーるについては、
+
+```tsx
+const isSmallDoll =
+    size === "10cmぬい" ||
+    size === "ねんどろいどどーる";
+```
+
+として、小さい型紙かどうかを判定しています。:chatgpt-content-reference{index="1"}
+
+そしてA4に収まる場合は、
+
+```tsx
+if (flatPiecesGroup && isSmallDoll && canFitInOneSheet) {
+```
+
+で、前身頃・後身頃・袖などをバラバラにせず、**全パーツ一式として1ページへ出力**しています。:chatgpt-content-reference{index="2"}
+
+今回の写真では、
+
+**前身頃＋後身頃＋袖**
+
+が無事A4 1枚に戻っています。
+
+---
+
+# 7. 30mm × 30mm実寸チェック
+
+印刷用ヘッダーには、
+
+```tsx
+<div class="scale-box">
+    <div>印刷倍率確認用</div>
+    <div style="font-weight:bold; font-size:10px;">
+        30mm × 30mm
+    </div>
+    <div style="color:#666;">
+        ※定規で確認
+    </div>
+</div>
+```
+
+を配置しています。:chatgpt-content-reference{index="3"}
+
+CSSでは実寸指定です。
+
+```css
+.scale-box {
+    width: 30mm;
+    height: 30mm;
+    min-width: 30mm;
+    flex-shrink: 0;
+    border: 1.5px solid #000;
+    box-sizing: border-box;
+}
+```
+
+:chatgpt-content-reference{index="4"}
+
+途中でこの枠が右端から見切れる問題がありました。
+
+最終的に `.sheet-header` を、
+
+```css
+.sheet-header {
+    width: calc(100% - 8mm);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 5mm;
+    border-bottom: 2px solid #333;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+```
+
+として、**ヘッダーだけ右側に8mmの安全領域を確保**しました。
+
+ここがポイントで、型紙自体を縮小したわけではありません。
+
+その結果、今回の写真では30mm枠が右側で切れずに印刷できています。
+
+---
+
+## 8. 印刷設定
+
+実寸型紙なので、Chrome側は基本的に、
+
+**用紙：A4  
+倍率：100%  
+1枚あたり：1ページ**
+
+で使用します。
+
+なお今回の写真では、まだ下部に
+
+```text
+about:blank
+1/1
+```
+
+が印刷されています。
+
+これはPattern Studioが出している文字ではなく、Chromeの印刷用ヘッダー/フッターです。
+
+最終的には、
+
+**印刷 → 詳細設定 → オプション →「ヘッダーとフッター」OFF**
+
+にするのがおすすめです。
+
+---
+
+# 現在の到達点
+
+今回確認できた状態はかなり大事です。
+
+**10cmぬい → A4 1枚に全パーツを配置**
+
+**30mm × 30mm確認枠 → 見切れず印刷**
+
+**型紙 → 前身頃・後身頃・袖をまとめて印刷**
+
+まで来ています。
+
+ですので、**この印刷レイアウトは一旦ここで固定**しましょう。ここから余白や型紙全体のscaleを不用意に変更しない方が安全です。
+
+---
+
+# 次にやること
+
+ここから、当初予定していた型紙として必要な7機能に戻ります。
+
+**① 1cm方眼 → ② 寸法表示 → ③ 合印 → ④ 地の目線 → ⑤「わ」 → ⑥ 裁断枚数 → ⑦ 30mm実寸チェック**
+
+この順番で進めるのが安全です。
+
+⑦は今回かなり進みましたので、実質的には**①〜⑥の型紙情報を追加していく段階**です。
+
+特に次は、
+
+### ① 1cm方眼
+
+から始めましょう。
+
+ただし、単純に背景へマス目を表示するだけではダメです。
+
+**1マス＝実寸10mm**
+
+になっている必要があります。
+
+現在の印刷処理はSVGを、
+
+```tsx
+<svg
+    viewBox="${cropX} ${cropY} ${cropW} ${cropH}"
+    style="width:${cropW}mm; height:${cropH}mm; display:block;"
+>
+```
+
+としてmm単位で出力しています。:chatgpt-content-reference{index="5"}
+
+ここに合わせて、PatternPreviewSvg側の座標系を確認しながら**実寸10mm方眼**を作ります。
+
+その次に、
+
+**寸法線**
+
+```text
+←──── 65mm ────→
+```
+
+**合印**
+
+```text
+      ▼
+──────┼──────
+```
+
+**地の目線**
+
+```text
+    ↑
+    │
+    │ 地の目
+    │
+    ↓
+```
+
+**わ**
+
+```text
+│
+│ わ
+│
+```
+
+**裁断枚数**
+
+```text
+前身頃（わ）
+1枚裁断
+
+後身頃
+左右2枚裁断
+
+袖
+左右2枚裁断
+```
+
+という形で、**実際にこの型紙を使って裁断・縫製できる情報**へ仕上げていきます。
+
+次は `PatternPreviewSvg.tsx` を中心に、**「このコードを探す → この直後にこれを貼る」方式**で①1cm方眼から順番に実装していくのが一番安全です。
+
+そして①〜⑦が完成したところで、最後にもう一度 **30mm枠を実測 → 型紙寸法も定規で実測 → Vercel本番反映**まで確認すれば、かなり実用的な型紙出力になります。
