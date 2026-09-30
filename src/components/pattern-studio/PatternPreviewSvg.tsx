@@ -122,6 +122,9 @@ export function PatternPreviewSvg({
     const titleFontSize = isSmallDoll ? 4.5 : isMidDoll ? 6.5 : 8.5;
     const subFontSize = isSmallDoll ? 3.4 : isMidDoll ? 5.0 : 6.8;
 
+    const dimensionFontSize = isSmallDoll ? 3.2 : isMidDoll ? 4.5 : 6;
+const dimensionOffset = isSmallDoll ? 7 : 10;
+
     const overlayPointedCollarPath = `
         M 0 ${neckCurvature}
         L ${cPointX} ${neckCurvature + cH}
@@ -607,6 +610,97 @@ export function PatternPreviewSvg({
                                 <text x={0} y={frontTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">
                                     1枚裁断 {isWoven ? "(布帛)" : ""}
                                 </text>
+
+
+
+
+{/* 寸法表示：前身頃 着丈 */}
+<g className="pattern-dimension">
+    <line
+        x1={-(halfW + actualFlareOffset) - dimensionOffset}
+        y1={frontTopY}
+        x2={-(halfW + actualFlareOffset) - dimensionOffset}
+        y2={bodyH * 0.45}
+        stroke="#666"
+        strokeWidth="0.6"
+    />
+
+    <line
+        x1={-(halfW + actualFlareOffset) - dimensionOffset - 2}
+        y1={frontTopY}
+        x2={-(halfW + actualFlareOffset) - dimensionOffset + 2}
+        y2={frontTopY}
+        stroke="#666"
+        strokeWidth="0.6"
+    />
+
+    <line
+        x1={-(halfW + actualFlareOffset) - dimensionOffset - 2}
+        y1={bodyH * 0.45}
+        x2={-(halfW + actualFlareOffset) - dimensionOffset + 2}
+        y2={bodyH * 0.45}
+        stroke="#666"
+        strokeWidth="0.6"
+    />
+
+    <text
+        x={-(halfW + actualFlareOffset) - dimensionOffset - 3}
+        y={0}
+        textAnchor="middle"
+        fontSize={dimensionFontSize}
+        fill="#555"
+        transform={`rotate(-90 ${-(halfW + actualFlareOffset) - dimensionOffset - 3} 0)`}
+    >
+        着丈 {length.toFixed(1)}cm
+    </text>
+</g>
+{/* 寸法表示：前身頃 身幅 */}
+<g className="pattern-dimension">
+    <line
+        x1={-halfW}
+        y1={bodyH * 0.45 + dimensionOffset}
+        x2={halfW}
+        y2={bodyH * 0.45 + dimensionOffset}
+        stroke="#666"
+        strokeWidth="0.6"
+    />
+
+    <line
+        x1={-halfW}
+        y1={bodyH * 0.45 + dimensionOffset - 2}
+        x2={-halfW}
+        y2={bodyH * 0.45 + dimensionOffset + 2}
+        stroke="#666"
+        strokeWidth="0.6"
+    />
+
+    <line
+        x1={halfW}
+        y1={bodyH * 0.45 + dimensionOffset - 2}
+        x2={halfW}
+        y2={bodyH * 0.45 + dimensionOffset + 2}
+        stroke="#666"
+        strokeWidth="0.6"
+    />
+
+    <text
+        x={0}
+        y={bodyH * 0.45 + dimensionOffset - 2}
+        textAnchor="middle"
+        fontSize={dimensionFontSize}
+        fill="#555"
+    >
+        身幅 {(bodyW / scale).toFixed(1)}cm
+    </text>
+</g>
+
+
+
+
+
+
+
+
                             </g>
 
                             <g id="piece-back" transform={`translate(${patternRightX}, ${bodiceTopY})`}>
@@ -713,6 +807,29 @@ export function PatternPreviewSvg({
                                             />
                                             <text x={0} y={sleeveTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">袖</text>
                                             <text x={0} y={sleeveTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">左右2枚裁断</text>
+
+
+
+
+
+{/* 寸法表示：袖丈 */}
+<text
+    x={0}
+    y={sleeveBodyH / 2 + dimensionOffset}
+    textAnchor="middle"
+    fontSize={dimensionFontSize}
+    fill="#555"
+>
+    袖丈 {sleeve.toFixed(1)}cm
+</text>
+
+
+
+
+
+
+
+
                                         </g>
                                     )}
                                 </>
@@ -739,6 +856,29 @@ export function PatternPreviewSvg({
                                         />
                                         <text x={0} y={sleeveTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">袖</text>
                                         <text x={0} y={sleeveTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">左右2枚裁断</text>
+
+
+
+
+{/* 寸法表示：袖丈 */}
+<text
+    x={0}
+    y={sleeveBodyH / 2 + dimensionOffset}
+    textAnchor="middle"
+    fontSize={dimensionFontSize}
+    fill="#555"
+>
+    袖丈 {sleeve.toFixed(1)}cm
+</text>
+
+
+
+
+
+
+
+
+
                                     </g>
                                 )
                             )}
