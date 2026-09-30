@@ -713,7 +713,7 @@ function PatternStudioContent() {
                             break-after: auto;
                         }
                      .sheet-header {
-    width: 100%;
+    width: calc(100% - 8mm);
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
