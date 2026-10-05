@@ -119,13 +119,10 @@ export function PatternPreviewSvg({
     // サイズ判定
     const isSmallDoll = size === "10cmぬい" || size === "ねんどろいどどーる";
     const isMidDoll = size === "15cmぬい" || size === "20cmぬい";
-    const titleFontSize = isSmallDoll ? 5.5 : isMidDoll ? 7.0 : 8.5;
-const subFontSize = isSmallDoll ? 4.2 : isMidDoll ? 5.5 : 6.8;
+ const titleFontSize = isSmallDoll ? 4.5 : isMidDoll ? 6.5 : 8.5;
+const subFontSize = isSmallDoll ? 3.4 : isMidDoll ? 5.0 : 6.8;
 
-
-
-
- const dimensionFontSize = isSmallDoll ? 3.2 : isMidDoll ? 4.5 : 6;
+const dimensionFontSize = isSmallDoll ? 3.2 : isMidDoll ? 4.5 : 6;
 const dimensionOffset = isSmallDoll ? 7 : 10;
 
 
