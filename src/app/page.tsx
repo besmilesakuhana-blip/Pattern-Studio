@@ -77,7 +77,19 @@ function PatternStudioContent() {
 
     const [viewMode, setViewMode] = useState<"overlay" | "pattern">("overlay");
 
+
+// 平置き型紙の画面表示専用ズーム
+const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
+
+
     const [length, setLength] = useState(6.5);
+
+
+
+
+
+
+
     const [width, setWidth] = useState(4.0);
     const [sleeve, setSleeve] = useState(3.0);
     const [sleeveAngle, setSleeveAngle] = useState(60);
@@ -1174,6 +1186,9 @@ function PatternStudioContent() {
                 <section className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 pb-10 sm:px-10 lg:grid-cols-[minmax(0,1fr)_320px]">
                     <div className="flex flex-col space-y-3">
                         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+
+
+
                             <div className="flex items-center space-x-2">
                                 <span className="text-neutral-400">表示モード:</span>
                                 <button
@@ -1210,6 +1225,66 @@ function PatternStudioContent() {
                                 </button>
                             )}
                         </div>
+
+
+
+
+{/* 平置き型紙：画面表示専用ズーム */}
+{viewMode === "pattern" && (
+    <div className="flex flex-wrap items-center gap-3 text-xs">
+        <span className="text-neutral-400">
+            表示倍率:
+        </span>
+
+        <button
+            type="button"
+            onClick={() =>
+                setPatternPreviewZoom((prev) =>
+                    Math.max(0.75, Number((prev - 0.25).toFixed(2)))
+                )
+            }
+            disabled={patternPreviewZoom <= 0.75}
+            className="h-8 w-8 rounded border border-neutral-700 text-neutral-300 transition hover:border-[#d7ae5d] hover:text-[#e4bf70] disabled:cursor-not-allowed disabled:opacity-30"
+        >
+            −
+        </button>
+
+        <span className="min-w-[52px] text-center font-medium text-[#e4bf70]">
+            {Math.round(patternPreviewZoom * 100)}%
+        </span>
+
+        <button
+            type="button"
+            onClick={() =>
+                setPatternPreviewZoom((prev) =>
+                    Math.min(2, Number((prev + 0.25).toFixed(2)))
+                )
+            }
+            disabled={patternPreviewZoom >= 2}
+            className="h-8 w-8 rounded border border-neutral-700 text-neutral-300 transition hover:border-[#d7ae5d] hover:text-[#e4bf70] disabled:cursor-not-allowed disabled:opacity-30"
+        >
+            ＋
+        </button>
+
+        <button
+            type="button"
+            onClick={() => setPatternPreviewZoom(1)}
+            className="rounded border border-neutral-700 px-3 py-1.5 text-neutral-300 transition hover:border-[#d7ae5d] hover:text-[#e4bf70]"
+        >
+            100%に戻す
+        </button>
+
+        <span className="text-[10px] text-neutral-500">
+            ※画面表示のみ。型紙の実寸・印刷倍率には影響しません。
+        </span>
+    </div>
+)}
+
+
+
+
+
+
 
                         <div className={`relative aspect-square max-h-[580px] min-h-[360px] overflow-hidden border border-[#333333] bg-white shadow-2xl`}>
                             {isGenerated && viewMode === "pattern" && previewImage && (
