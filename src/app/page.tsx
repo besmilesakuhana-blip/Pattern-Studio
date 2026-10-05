@@ -596,10 +596,21 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
                 cropH: number,
                 isSubPiece: boolean = false
             ) => {
+
+
+
+
+
+
                 const clone = sourceNode.cloneNode(true) as SVGGraphicsElement;
-                if (isSubPiece) {
-                    clone.removeAttribute("transform");
-                }
+              
+
+
+
+
+
+
+
                 const svgPieceMarkup = `
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="${cropX} ${cropY} ${cropW} ${cropH}" style="width:${cropW}mm; height:${cropH}mm; display:block;">
                         ${serializer.serializeToString(clone)}
@@ -637,20 +648,33 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
                     const el = svgEl.querySelector(`#${cfg.id}`) as SVGGraphicsElement;
                     if (!el) return;
 
-                    const pathElem = el.querySelector("path");
-                    let pathBBox = { x: 0, y: 0, width: 0, height: 0 };
-                    if (pathElem) {
-                        try {
-                            const pb = pathElem.getBBox();
-                            pathBBox = { x: pb.x, y: pb.y, width: pb.width, height: pb.height };
-                        } catch {}
-                    }
-                    let groupBBox = { x: 0, y: 0, width: 0, height: 0 };
-                    try {
-                        groupBBox = el.getBBox();
-                    } catch {}
 
-                    const baseBox = (pathBBox.width > 0) ? pathBBox : groupBBox;
+
+                    
+                  let baseBox = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+};
+
+try {
+    const bb = el.getBBox();
+
+    baseBox = {
+        x: bb.x,
+        y: bb.y,
+        width: bb.width,
+        height: bb.height
+    };
+} catch {}
+
+if (baseBox.width === 0 || baseBox.height === 0) return;
+
+
+
+
+
                     if (baseBox.width === 0 || baseBox.height === 0) return;
 
                     const padX = 15;
