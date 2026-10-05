@@ -603,7 +603,9 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
 
 
                 const clone = sourceNode.cloneNode(true) as SVGGraphicsElement;
-              
+              if (isSubPiece) {
+    clone.removeAttribute("transform");
+}
 
 
 
@@ -651,7 +653,22 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
 
 
                     
-                  let baseBox = {
+              const pathElem = el.querySelector("path");
+let pathBBox = { x: 0, y: 0, width: 0, height: 0 };
+
+if (pathElem) {
+    try {
+        const pb = pathElem.getBBox();
+        pathBBox = {
+            x: pb.x,
+            y: pb.y,
+            width: pb.width,
+            height: pb.height
+        };
+    } catch {}
+}
+
+let groupBBox = {
     x: 0,
     y: 0,
     width: 0,
@@ -659,15 +676,13 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
 };
 
 try {
-    const bb = el.getBBox();
-
-    baseBox = {
-        x: bb.x,
-        y: bb.y,
-        width: bb.width,
-        height: bb.height
-    };
+    groupBBox = el.getBBox();
 } catch {}
+
+const baseBox =
+    pathBBox.width > 0
+        ? pathBBox
+        : groupBBox;
 
 if (baseBox.width === 0 || baseBox.height === 0) return;
 
