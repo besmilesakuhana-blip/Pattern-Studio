@@ -125,8 +125,8 @@ const subFontSize = isSmallDoll ? 4.2 : isMidDoll ? 5.5 : 6.8;
 
 
 
- const dimensionFontSize = isSmallDoll ? 5.5 : isMidDoll ? 6.5 : 7.5;
-const dimensionOffset = isSmallDoll ? 10 : isMidDoll ? 12 : 14;
+ const dimensionFontSize = isSmallDoll ? 3.2 : isMidDoll ? 4.5 : 6;
+const dimensionOffset = isSmallDoll ? 7 : 10;
 
 
 
