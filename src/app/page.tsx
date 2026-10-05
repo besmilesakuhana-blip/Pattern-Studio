@@ -1316,7 +1316,21 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
                                             </div>
                                         )}
 
-                                        <div className={`relative z-10 ${viewMode === "overlay" ? "w-full h-full" : ""}`}>
+                                      <div
+    className={`relative z-10 ${
+        viewMode === "overlay"
+            ? "w-full h-full"
+            : ""
+    }`}
+    style={
+        viewMode === "pattern"
+            ? {
+                zoom: patternPreviewZoom,
+              }
+            : undefined
+    }
+>
+
                                             <PatternPreviewSvg
                                                 length={length}
                                                 width={width}
@@ -1344,6 +1358,7 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
                                                 collarScale={collarScale}
                                                 svgRef={patternSvgRef}
                                             />
+                                              
                                         </div>
                                     </div>
                                 ) : (
