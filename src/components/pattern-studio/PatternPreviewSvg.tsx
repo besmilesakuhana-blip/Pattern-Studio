@@ -370,8 +370,16 @@ const dimensionOffset = isSmallDoll ? 7 : 10;
     const sleeveTextY1 = isSmallDoll ? (sleeveTopY - 11) : -2;
     const sleeveTextY2 = isSmallDoll ? (sleeveTopY - 3) : (titleFontSize + 3);
 
-    const skirtSepTextY1 = isSmallDoll ? (skirtSepTopY - 11) : -4;
-    const skirtSepTextY2 = isSmallDoll ? (skirtSepTopY - 3) : (titleFontSize + 2);
+
+
+
+   const skirtSepTextY1 = skirtSepTopY - 18;
+const skirtSepTextY2 = skirtSepTopY - 8;
+
+
+
+
+
 
     const viewBoxStr = isOverlayMode ? "0 0 500 500" : `0 0 ${maxPatternWidth} ${maxPatternHeight}`;
     const svgStyle = isOverlayMode ? { width: "100%", height: "100%" } : { width: `${maxPatternWidth}px`, height: `${maxPatternHeight}px` };
@@ -588,6 +596,12 @@ const dimensionOffset = isSmallDoll ? 7 : 10;
                 <g id="flat-pattern-pieces" transform="translate(0, 0)">
                     {isAnyTop && (
                         <>
+                          
+                          
+                          
+                          
+                          
+                          
                             <g id="piece-front" transform={`translate(${patternLeftX}, ${bodiceTopY})`}>
                                 {seamStrokeWidth > 0 && (
                                     <path
@@ -938,10 +952,32 @@ const dimensionOffset = isSmallDoll ? 7 : 10;
                                     strokeWidth="1.5"
                                     strokeLinejoin="round"
                                 />
-                                <text x={0} y={isSmallDoll ? (pY_top - 11) : -4} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
-                                    前パンツ
-                                </text>
-                                <text x={0} y={isSmallDoll ? (pY_top - 3) : (titleFontSize + 3)} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">左右2枚裁断</text>
+                              
+                              
+                              
+                              
+                              <text
+    x={0}
+    y={pY_top - 18}
+    textAnchor="middle"
+    fontSize={titleFontSize}
+    className="pattern-label-title"
+>
+    前パンツ
+</text>
+
+<text
+    x={0}
+    y={pY_top - 8}
+    textAnchor="middle"
+    fontSize={subFontSize}
+    className="pattern-label-sub"
+>
+    左右2枚裁断
+</text>
+
+
+
                             </g>
 
                             <g transform={`translate(${pantGap}, 0)`}>
@@ -963,10 +999,33 @@ const dimensionOffset = isSmallDoll ? 7 : 10;
                                     strokeWidth="1.5"
                                     strokeLinejoin="round"
                                 />
-                                <text x={0} y={isSmallDoll ? (pY_top - 11) : -4} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
-                                    後パンツ
-                                </text>
-                                <text x={0} y={isSmallDoll ? (pY_top - 3) : (titleFontSize + 3)} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">左右2枚裁断</text>
+                              
+                              
+                              
+                              
+                              <text
+    x={0}
+    y={pY_top - 18}
+    textAnchor="middle"
+    fontSize={titleFontSize}
+    className="pattern-label-title"
+>
+    後パンツ
+</text>
+
+<text
+    x={0}
+    y={pY_top - 8}
+    textAnchor="middle"
+    fontSize={subFontSize}
+    className="pattern-label-sub"
+>
+    左右2枚裁断
+</text>
+
+
+
+
                             </g>
                         </g>
                     )}
