@@ -602,9 +602,14 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
 
 
 
-                const clone = sourceNode.cloneNode(true) as SVGGraphicsElement;
-              if (isSubPiece) {
-    clone.removeAttribute("transform");
+   const clone = sourceNode.cloneNode(true) as SVGGraphicsElement;
+
+if (isSubPiece) {
+    const originalTransform = sourceNode.getAttribute("transform");
+
+    if (originalTransform) {
+        clone.removeAttribute("transform");
+    }
 }
 
 
@@ -646,88 +651,181 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
                 const cropH = measuredBox ? measuredBox.height + 16 : actualTotalH;
                 pagesHtml = generatePageMarkup(flatPiecesGroup, "全パーツ一式", cropX, cropY, cropW, cropH, false);
             } else {
-                pieceConfigs.forEach((cfg) => {
-                    const el = svgEl.querySelector(`#${cfg.id}`) as SVGGraphicsElement;
-                    if (!el) return;
 
 
 
-                    
-              const pathElem = el.querySelector("path");
-let pathBBox = { x: 0, y: 0, width: 0, height: 0 };
+               pieceConfigs.forEach((cfg) => {
+    const el = svgEl.querySelector(`#${cfg.id}`) as SVGGraphicsElement;
+    if (!el) return;
 
-if (pathElem) {
+    // パーツ全体のBBoxを取得
+    // 型紙本体だけでなく、文字・寸法表示も含める
+    let groupBBox: DOMRect | SVGRect;
+
     try {
-        const pb = pathElem.getBBox();
-        pathBBox = {
-            x: pb.x,
-            y: pb.y,
-            width: pb.width,
-            height: pb.height
-        };
-    } catch {}
-}
+        groupBBox = el.getBBox();
+    } catch {
+        return;
+    }
 
-let groupBBox = {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0
-};
+    if (
+        !groupBBox ||
+        groupBBox.width <= 0 ||
+        groupBBox.height <= 0
+    ) {
+        return;
+    }
 
-try {
-    groupBBox = el.getBBox();
-} catch {}
+    // 印刷時に文字や寸法線が切れないための余白
+    const padX = 12;
+    const padYTop = 16;
+    const padYBottom = 12;
 
-const baseBox =
-    pathBBox.width > 0
-        ? pathBBox
-        : groupBBox;
+    const cropX = groupBBox.x - padX;
+    const cropY = groupBBox.y - padYTop;
+    const cropW = groupBBox.width + padX * 2;
+    const cropH = groupBBox.height + padYTop + padYBottom;
 
-if (baseBox.width === 0 || baseBox.height === 0) return;
+    // A4印刷可能範囲
+    const printableW =
+        sheetMinW - margin_mm * 2 - 10;
+
+    const printableH =
+        sheetMaxW - margin_mm * 2 - printAreaTop_mm - 10;
+
+    const needSplitX = cropW > printableW;
+    const needSplitY = cropH > printableH;
+
+    const overlap = 10;
+
+    // -----------------------------
+    // 横・縦の両方にはみ出す場合
+    // -----------------------------
+    if (needSplitX && needSplitY) {
+        const halfW = groupBBox.width / 2;
+        const halfH = groupBBox.height / 2;
+
+        pagesHtml += generatePageMarkup(
+            el,
+            `${cfg.name} (左上・part1)`,
+            cropX,
+            cropY,
+            halfW + padX + overlap,
+            halfH + padYTop + overlap,
+            true
+        );
+
+        pagesHtml += generatePageMarkup(
+            el,
+            `${cfg.name} (右上・part2)`,
+            groupBBox.x + halfW - overlap,
+            cropY,
+            halfW + padX + overlap,
+            halfH + padYTop + overlap,
+            true
+        );
+
+        pagesHtml += generatePageMarkup(
+            el,
+            `${cfg.name} (左下・part3)`,
+            cropX,
+            groupBBox.y + halfH - overlap,
+            halfW + padX + overlap,
+            halfH + padYBottom + overlap,
+            true
+        );
+
+        pagesHtml += generatePageMarkup(
+            el,
+            `${cfg.name} (右下・part4)`,
+            groupBBox.x + halfW - overlap,
+            groupBBox.y + halfH - overlap,
+            halfW + padX + overlap,
+            halfH + padYBottom + overlap,
+            true
+        );
+
+        return;
+    }
+
+    // -----------------------------
+    // 横方向だけ分割
+    // -----------------------------
+    if (needSplitX) {
+        const halfW = groupBBox.width / 2;
+
+        pagesHtml += generatePageMarkup(
+            el,
+            `${cfg.name} (左・part1)`,
+            cropX,
+            cropY,
+            halfW + padX + overlap,
+            cropH,
+            true
+        );
+
+        pagesHtml += generatePageMarkup(
+            el,
+            `${cfg.name} (右・part2)`,
+            groupBBox.x + halfW - overlap,
+            cropY,
+            halfW + padX + overlap,
+            cropH,
+            true
+        );
+
+        return;
+    }
+
+    // -----------------------------
+    // 縦方向だけ分割
+    // -----------------------------
+    if (needSplitY) {
+        const halfH = groupBBox.height / 2;
+
+        pagesHtml += generatePageMarkup(
+            el,
+            `${cfg.name} (上・part1)`,
+            cropX,
+            cropY,
+            cropW,
+            halfH + padYTop + overlap,
+            true
+        );
+
+        pagesHtml += generatePageMarkup(
+            el,
+            `${cfg.name} (下・part2)`,
+            cropX,
+            groupBBox.y + halfH - overlap,
+            cropW,
+            halfH + padYBottom + overlap,
+            true
+        );
+
+        return;
+    }
+
+    // -----------------------------
+    // A4 1枚に収まる場合
+    // -----------------------------
+    pagesHtml += generatePageMarkup(
+        el,
+        cfg.name,
+        cropX,
+        cropY,
+        cropW,
+        cropH,
+        true
+    );
+});
 
 
 
 
 
-                    if (baseBox.width === 0 || baseBox.height === 0) return;
 
-                    const padX = 15;
-                    const padYTop = 22;
-                    const padYBottom = 15;
-                    const pieceW_mm = baseBox.width + padX * 2;
-                    const pieceH_mm = baseBox.height + padYTop + padYBottom;
 
-                    const curSheetW_mm = sheetMinW;
-                    const curSheetH_mm = sheetMaxW;
-                    const printableW_mm = curSheetW_mm - margin_mm * 2 - 10;
-                    const printableH_mm = curSheetH_mm - margin_mm * 2 - printAreaTop_mm - 10;
-
-                    const needSplitX = pieceW_mm > printableW_mm;
-                    const needSplitY = pieceH_mm > printableH_mm;
-                    const overlap = 10;
-                    const startX = baseBox.x - padX;
-                    const startY = baseBox.y - padYTop;
-
-                    if (needSplitX && needSplitY) {
-                        const halfW = baseBox.width / 2;
-                        const halfH = baseBox.height / 2;
-                        pagesHtml += generatePageMarkup(el, `${cfg.name} (左上・part1)`, startX, startY, halfW + padX + overlap, halfH + padYTop + overlap, true);
-                        pagesHtml += generatePageMarkup(el, `${cfg.name} (右上・part2)`, baseBox.x + halfW - overlap, startY, halfW + padX + overlap, halfH + padYTop + overlap, true);
-                        pagesHtml += generatePageMarkup(el, `${cfg.name} (左下・part3)`, startX, baseBox.y + halfH - overlap, halfW + padX + overlap, halfH + padYBottom + overlap, true);
-                        pagesHtml += generatePageMarkup(el, `${cfg.name} (右下・part4)`, baseBox.x + halfW - overlap, baseBox.y + halfH - overlap, halfW + padX + overlap, halfH + padYBottom + overlap, true);
-                    } else if (needSplitX && !needSplitY) {
-                        const halfW = baseBox.width / 2;
-                        pagesHtml += generatePageMarkup(el, `${cfg.name} (左・part1)`, startX, startY, halfW + padX + overlap, pieceH_mm, true);
-                        pagesHtml += generatePageMarkup(el, `${cfg.name} (右・part2)`, baseBox.x + halfW - overlap, startY, halfW + padX + overlap, pieceH_mm, true);
-                    } else if (!needSplitX && needSplitY) {
-                        const halfH = baseBox.height / 2;
-                        pagesHtml += generatePageMarkup(el, `${cfg.name} (上・part1)`, startX, startY, pieceW_mm, halfH + padYTop + overlap, true);
-                        pagesHtml += generatePageMarkup(el, `${cfg.name} (下・part2)`, startX, baseBox.y + halfH - overlap, pieceW_mm, halfH + padYBottom + overlap, true);
-                    } else {
-                        pagesHtml += generatePageMarkup(el, cfg.name, startX, startY, pieceW_mm, pieceH_mm, true);
-                    }
-                });
             }
 
             printWindow.document.write(`
@@ -981,8 +1079,17 @@ if (baseBox.width === 0 || baseBox.height === 0) return;
             const needSplitY = pieceH_mm > printableH_mm;
             const overlap = 10;
 
+
+
+
+
+            
             const startX = baseBox.x - padX;
             const startY = baseBox.y - padYTop;
+
+
+
+
 
             if (needSplitX && needSplitY) {
                 const halfW = baseBox.width / 2;
