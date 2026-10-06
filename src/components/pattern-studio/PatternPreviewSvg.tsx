@@ -128,6 +128,13 @@ const dimensionOffset = isSmallDoll ? 7 : 10;
 
 
 
+// 型紙とタイトル・裁断情報の間隔
+const labelGap = isSmallDoll ? 14 : isMidDoll ? 20 : 24;
+const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
+
+
+
+
     const overlayPointedCollarPath = `
         M 0 ${neckCurvature}
         L ${cPointX} ${neckCurvature + cH}
@@ -373,8 +380,8 @@ const dimensionOffset = isSmallDoll ? 7 : 10;
 
 
 
-   const skirtSepTextY1 = skirtSepTopY - 18;
-const skirtSepTextY2 = skirtSepTopY - 8;
+   const skirtSepTextY2 = skirtSepTopY - labelGap;
+const skirtSepTextY1 = skirtSepTextY2 - labelLineGap;
 
 
 
@@ -958,7 +965,7 @@ const skirtSepTextY2 = skirtSepTopY - 8;
                               
                               <text
     x={0}
-    y={pY_top - 18}
+    y={pY_top - labelGap - labelLineGap}
     textAnchor="middle"
     fontSize={titleFontSize}
     className="pattern-label-title"
@@ -968,7 +975,7 @@ const skirtSepTextY2 = skirtSepTopY - 8;
 
 <text
     x={0}
-    y={pY_top - 8}
+    y={pY_top - labelGap}
     textAnchor="middle"
     fontSize={subFontSize}
     className="pattern-label-sub"
