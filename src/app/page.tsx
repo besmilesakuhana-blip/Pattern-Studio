@@ -604,13 +604,8 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
 
    const clone = sourceNode.cloneNode(true) as SVGGraphicsElement;
 
-if (isSubPiece) {
-    const originalTransform = sourceNode.getAttribute("transform");
-
-    if (originalTransform) {
-        clone.removeAttribute("transform");
-    }
-}
+// 印刷時も元SVGの座標関係を維持する
+// transform は削除しない
 
 
 
