@@ -322,7 +322,18 @@ const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
         const bodiceBottomY = bodiceTopY + topPartH;
         const cH_val = collarType !== "襟なし" ? cH : 0;
         collarY = bodiceBottomY + Math.max(15, cH_val + 8) + (isSmallDoll ? 15 : 25);
-        bottomPartsY = collarType !== "襟なし" ? collarY + cH_val + (isSmallDoll ? 25 : 45) : bodiceBottomY + (isSmallDoll ? 25 : 45);
+
+
+
+
+
+      bottomPartsY = collarType !== "襟なし"
+    ? collarY + cH_val + (isSmallDoll ? 35 : 55)
+    : bodiceBottomY + (isSmallDoll ? 35 : 55);
+
+
+
+
 
         const sleeveTotalCap = (sleeveBodyH / 2 + sleeveCapH);
         sleeveY = bottomPartsY + sleeveTotalCap + (isSmallDoll ? 15 : 25);
@@ -386,8 +397,8 @@ const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
 
 
 
-   const skirtSepTextY2 = skirtSepTopY - labelGap;
-const skirtSepTextY1 = skirtSepTextY2 - labelLineGap;
+   const skirtSepTextY1 = skirtSepTopY - 14;
+const skirtSepTextY2 = skirtSepTopY - 6;
 
 
 
@@ -845,7 +856,11 @@ const skirtSepTextY1 = skirtSepTextY2 - labelLineGap;
 {/* 寸法表示：袖丈 */}
 <text
     x={0}
-    y={sleeveBodyH / 2 + dimensionOffset}
+   y={
+    isSeparatedOnePiece
+        ? bodiceH * 0.5 + dimensionOffset
+        : bodyH * 0.45 + dimensionOffset - 2
+}
     textAnchor="middle"
     fontSize={dimensionFontSize}
     fill="#555"
