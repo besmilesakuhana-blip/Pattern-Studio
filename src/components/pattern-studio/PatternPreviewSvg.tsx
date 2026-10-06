@@ -129,7 +129,7 @@ const dimensionOffset = isSmallDoll ? 7 : 10;
 
 
 // 型紙とタイトル・裁断情報の間隔
-const labelGap = isSmallDoll ? 14 : isMidDoll ? 20 : 24;
+const labelGap = isSmallDoll ? 18 : isMidDoll ? 25 : 30;
 const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
 
 
@@ -279,7 +279,13 @@ const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
     const overlayWaistW = bodyW - waistIndent * 0.8;
     const overlaySkirtBottomW = overlayWaistW + flareOffset * 2.2;
 
-    const PAD = isSmallDoll ? 30 : 50;
+
+
+
+    const PAD = isSmallDoll ? 45 : 65;
+
+
+
 
     let patternLeftX = 250;
     let patternRightX = 250;
@@ -1012,7 +1018,7 @@ const skirtSepTextY1 = skirtSepTextY2 - labelLineGap;
                               
                               <text
     x={0}
-    y={pY_top - 18}
+    y={pY_top - labelGap - labelLineGap}
     textAnchor="middle"
     fontSize={titleFontSize}
     className="pattern-label-title"
@@ -1022,7 +1028,7 @@ const skirtSepTextY1 = skirtSepTextY2 - labelLineGap;
 
 <text
     x={0}
-    y={pY_top - 8}
+    y={pY_top - labelGap}
     textAnchor="middle"
     fontSize={subFontSize}
     className="pattern-label-sub"
