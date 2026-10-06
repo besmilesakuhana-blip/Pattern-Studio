@@ -613,11 +613,15 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
 
 
 
-                const svgPieceMarkup = `
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="${cropX} ${cropY} ${cropW} ${cropH}" style="width:${cropW}mm; height:${cropH}mm; display:block;">
-                        ${serializer.serializeToString(clone)}
-                    </svg>
-                `;
+               const svgPieceMarkup = `
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="${cropX} ${cropY} ${cropW} ${cropH}"
+        style="width:${cropW}mm; height:${cropH}mm; display:block; overflow:hidden;"
+    >
+        ${serializer.serializeToString(clone)}
+    </svg>
+`;
 
                 return `
                     <div class="sheet-page">
