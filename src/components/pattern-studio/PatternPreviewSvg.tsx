@@ -451,6 +451,30 @@ const backNotchY =
 
 
 
+// ================================
+// 袖の合印
+// 左側 = 前身頃側：1個
+// 右側 = 後身頃側：2個
+// ================================
+
+// 袖山の左右に合印を配置
+const sleeveNotchY =
+    -sleeveBodyH / 2 - sleeveCapH * 0.35;
+
+const sleeveFrontNotchX =
+    -flatSleeveW * 0.35;
+
+const sleeveBackNotchX =
+    flatSleeveW * 0.35;
+
+// 後側の2個目を少し下へずらす
+const sleeveBackNotchY2 =
+    sleeveNotchY + notchSize * 2.2;
+
+
+
+
+
 
 
     const viewBoxStr = isOverlayMode ? "0 0 500 500" : `0 0 ${maxPatternWidth} ${maxPatternHeight}`;
@@ -954,6 +978,68 @@ const backNotchY =
                                                 strokeWidth="1.5"
                                                 strokeLinejoin="round"
                                             />
+
+
+
+
+
+{/* 合印：袖 前側 1個 */}
+<g
+    className="pattern-notch"
+    transform={`translate(${sleeveFrontNotchX}, ${sleeveNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+{/* 合印：袖 後側 2個 */}
+<g
+    className="pattern-notch"
+    transform={`translate(${sleeveBackNotchX}, ${sleeveNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        transform={`translate(0, ${notchSize * 2.2})`}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+
+
+
+
+
                                             <text x={0} y={sleeveTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">袖</text>
                                             <text x={0} y={sleeveTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">左右2枚裁断</text>
 
@@ -1007,6 +1093,68 @@ const backNotchY =
                                             strokeWidth="1.5"
                                             strokeLinejoin="round"
                                         />
+
+
+
+
+
+{/* 合印：袖 前側 1個 */}
+<g
+    className="pattern-notch"
+    transform={`translate(${sleeveFrontNotchX}, ${sleeveNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+{/* 合印：袖 後側 2個 */}
+<g
+    className="pattern-notch"
+    transform={`translate(${sleeveBackNotchX}, ${sleeveNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        transform={`translate(0, ${notchSize * 2.2})`}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+
+
+
+
+
                                         <text x={0} y={sleeveTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">袖</text>
                                         <text x={0} y={sleeveTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">左右2枚裁断</text>
 
