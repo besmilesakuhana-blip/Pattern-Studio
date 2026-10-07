@@ -665,6 +665,8 @@ const frontNotchY =
                                         strokeLinejoin="round"
                                         strokeLinecap="round"
                                     />
+
+
                                 )}
                                 <path
                                     d={frontBodicePath}
@@ -673,6 +675,35 @@ const frontNotchY =
                                     strokeWidth="1.5"
                                     strokeLinejoin="round"
                                 />
+
+
+
+
+
+{/* 合印：前身頃 右脇 */}
+<g
+    className="pattern-notch"
+    transform={`translate(${frontNotchX}, ${frontNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+
+
+
+
+
                                 <text x={0} y={frontTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
                                     {isSeparatedOnePiece ? "上半身前身頃 (わ)" : isTee ? "Tシャツ前身頃 (わ)" : "前身頃 (わ)"}
                                 </text>
