@@ -433,6 +433,26 @@ const frontNotchY =
 
 
 
+// 後身頃・右脇の合印位置
+const backBottomY = isSeparatedOnePiece
+    ? bodiceH * 0.5
+    : bodyH * 0.45;
+
+const backNotchX = halfW;
+
+const backNotchY =
+    backTopY +
+    armholeDepth +
+    (backBottomY - (backTopY + armholeDepth)) * 0.45;
+
+
+
+
+
+
+
+
+
     const viewBoxStr = isOverlayMode ? "0 0 500 500" : `0 0 ${maxPatternWidth} ${maxPatternHeight}`;
     const svgStyle = isOverlayMode ? { width: "100%", height: "100%" } : { width: `${maxPatternWidth}px`, height: `${maxPatternHeight}px` };
 
@@ -815,6 +835,10 @@ const frontNotchY =
                                         strokeLinecap="round"
                                     />
                                 )}
+
+
+
+
                                 <path
                                     d={backBodicePath}
                                     fill="#faf8f5"
@@ -822,6 +846,31 @@ const frontNotchY =
                                     strokeWidth="1.5"
                                     strokeLinejoin="round"
                                 />
+
+{/* 合印：後身頃 右脇 */}
+<g
+    className="pattern-notch"
+    transform={`translate(${backNotchX}, ${backNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+
+
+
+
+
                                 <text x={backTextX} y={backTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
                                     {isSeparatedOnePiece ? "上半身後身頃" : isTee ? "Tシャツ後身頃" : "後身頃"}
                                 </text>
