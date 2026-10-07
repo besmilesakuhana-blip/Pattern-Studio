@@ -1103,9 +1103,9 @@ const baseBox = groupBBox;
                 return;
             }
 
-            const padX = 15;
-            const padYTop = 22;
-            const padYBottom = 15;
+            const padX = 12;
+const padYTop = 16;
+const padYBottom = 12;
 
             const pieceW_mm = baseBox.width + padX * 2;
             const pieceH_mm = baseBox.height + padYTop + padYBottom;
