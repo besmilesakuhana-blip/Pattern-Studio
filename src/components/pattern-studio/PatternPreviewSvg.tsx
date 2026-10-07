@@ -417,6 +417,22 @@ const frontWidthDimensionY =
 
 
 
+
+    // ================================
+// 合印
+// ================================
+const notchSize = isSmallDoll ? 2.5 : isMidDoll ? 3.5 : 4.5;
+
+// 前身頃・右脇の合印位置
+const frontNotchX = halfW;
+const frontNotchY =
+    frontTopY + armholeDepth + (frontBottomY - (frontTopY + armholeDepth)) * 0.45;
+
+
+
+
+
+
     const viewBoxStr = isOverlayMode ? "0 0 500 500" : `0 0 ${maxPatternWidth} ${maxPatternHeight}`;
     const svgStyle = isOverlayMode ? { width: "100%", height: "100%" } : { width: `${maxPatternWidth}px`, height: `${maxPatternHeight}px` };
 

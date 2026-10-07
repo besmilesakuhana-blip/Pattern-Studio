@@ -61277,3 +61277,1659 @@ about:blank
 次は `PatternPreviewSvg.tsx` を中心に、**「このコードを探す → この直後にこれを貼る」方式**で①1cm方眼から順番に実装していくのが一番安全です。
 
 そして①〜⑦が完成したところで、最後にもう一度 **30mm枠を実測 → 型紙寸法も定規で実測 → Vercel本番反映**まで確認すれば、かなり実用的な型紙出力になります。
+
+
+
+
+
+
+
+もちろんです。ここまでの **Pattern Studio「平置き型紙」改善作業**を、あとから見返しても分かるようにコード込みで整理しておきます。
+
+# Pattern Studio｜ここまでの作業まとめ
+
+## 1. 平置き型紙に1cm方眼を追加
+
+型紙の大きさを視覚的に確認しやすくするため、平置き型紙の背景に **10mm＝1cm単位の方眼**を追加しました。
+
+`PatternPreviewSvg.tsx` の平置き型紙側でSVGパターンを使用しています。
+
+```tsx
+{!isOverlayMode && (
+    <defs>
+        <pattern
+            id="patternGrid"
+            width="10"
+            height="10"
+            patternUnits="userSpaceOnUse"
+        >
+            <path
+                d="M 10 0 L 0 0 0 10"
+                fill="none"
+                stroke="#ececec"
+                strokeWidth="0.5"
+            />
+        </pattern>
+    </defs>
+)}
+
+{!isOverlayMode && (
+    <rect
+        width="100%"
+        height="100%"
+        fill="url(#patternGrid)"
+        className="pattern-grid-rect"
+    />
+)}
+```
+
+平置き型紙では基本スケールが
+
+```tsx
+const scale = isOverlayMode ? (10 * overlayZoom) : 10;
+```
+
+となっているため、**1cm＝10 SVG単位**という考え方で方眼を合わせています。PatternPreviewSvg
+
+また、方眼には
+
+```tsx
+className="pattern-grid-rect"
+```
+
+を付けています。
+
+SVG書き出し時には既存の処理でこの方眼を削除するようになっています。
+
+```tsx
+const gridRect = clone.querySelector(".pattern-grid-rect");
+
+if (gridRect) {
+    gridRect.remove();
+}
+```
+
+つまり、**画面上では方眼を確認できる一方、型紙SVGそのものには不要な背景を入れない**構造です。page
+
+---
+
+## 2. 型紙に寸法表示を追加・調整
+
+平置き型紙で、パーツの寸法を確認できるようにしました。
+
+小さいドール用の型紙では文字が型紙に重なりやすかったため、サイズに応じて文字サイズを変える構成になっています。
+
+現在は概ね、
+
+```tsx
+const titleFontSize =
+    isSmallDoll ? 4.5 :
+    isMidDoll ? 6.5 :
+    8.5;
+
+const subFontSize =
+    isSmallDoll ? 3.4 :
+    isMidDoll ? 5.0 :
+    6.8;
+
+const dimensionFontSize =
+    isSmallDoll ? 3.2 :
+    isMidDoll ? 4.5 :
+    6;
+
+const dimensionOffset =
+    isSmallDoll ? 7 : 10;
+```
+
+という考え方になっています。PatternPreviewSvg
+
+その後、**文字と型紙が重なる部分についてはユーザー側でさらに文字を小さく調整済み**です。
+
+ここは現在の調整を維持します。
+
+---
+
+## 3. 型紙の表示倍率機能を追加
+
+今回かなり重要だった部分です。
+
+平置き型紙を画面上で、
+
+**75% → 100% → 125% → 150% → 175% → 200%**
+
+のように拡大・縮小できるようにしました。
+
+まず `page.tsx` に表示専用倍率を追加。
+
+```tsx
+// 平置き型紙の画面表示専用ズーム
+const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
+```
+
+初期値 `1` なので、
+
+```text
+1 = 100%
+```
+
+です。page
+
+### −ボタン
+
+```tsx
+<button
+    type="button"
+    onClick={() =>
+        setPatternPreviewZoom((prev) =>
+            Math.max(
+                0.75,
+                Number((prev - 0.25).toFixed(2))
+            )
+        )
+    }
+    disabled={patternPreviewZoom <= 0.75}
+>
+    −
+</button>
+```
+
+最低倍率は **75%**。
+
+### 現在倍率
+
+```tsx
+<span>
+    {Math.round(patternPreviewZoom * 100)}%
+</span>
+```
+
+### ＋ボタン
+
+```tsx
+<button
+    type="button"
+    onClick={() =>
+        setPatternPreviewZoom((prev) =>
+            Math.min(
+                2,
+                Number((prev + 0.25).toFixed(2))
+            )
+        )
+    }
+    disabled={patternPreviewZoom >= 2}
+>
+    ＋
+</button>
+```
+
+最大倍率は **200%**。
+
+### 100%へ戻す
+
+```tsx
+<button
+    type="button"
+    onClick={() => setPatternPreviewZoom(1)}
+>
+    100%に戻す
+</button>
+```
+
+---
+
+## 4. 最初は倍率表示だけ変わる問題が発生
+
+ここが今回の修正ポイントでした。
+
+最初は、
+
+```text
+75%
+100%
+125%
+```
+
+と数字は変化しているのに、**実際の型紙の大きさがほとんど変化していませんでした。**
+
+原因は、
+
+```tsx
+patternPreviewZoom
+```
+
+というstate自体は正常に更新されていましたが、実際の `PatternPreviewSvg` の表示サイズに倍率が適用されていなかったことです。
+
+一方 `PatternPreviewSvg.tsx` 側では、平置き型紙が、
+
+```tsx
+const viewBoxStr =
+    isOverlayMode
+        ? "0 0 500 500"
+        : `0 0 ${maxPatternWidth} ${maxPatternHeight}`;
+
+const svgStyle =
+    isOverlayMode
+        ? { width: "100%", height: "100%" }
+        : {
+              width: `${maxPatternWidth}px`,
+              height: `${maxPatternHeight}px`
+          };
+```
+
+という構造になっています。PatternPreviewSvg
+
+---
+
+## 5. SVGの表示領域に `zoom` を適用して解決
+
+最終的に、`PatternPreviewSvg` を囲んでいる `div` に画面表示専用の `zoom` を適用しました。
+
+変更前：
+
+```tsx
+<div
+    className={`relative z-10 ${
+        viewMode === "overlay"
+            ? "w-full h-full"
+            : ""
+    }`}
+>
+```
+
+変更後：
+
+```tsx
+<div
+    className={`relative z-10 ${
+        viewMode === "overlay"
+            ? "w-full h-full"
+            : ""
+    }`}
+    style={
+        viewMode === "pattern"
+            ? {
+                  zoom: patternPreviewZoom,
+              }
+            : undefined
+    }
+>
+```
+
+これによって、
+
+```text
+75%   → 縮小
+100%  → 標準
+125%  → 拡大
+150%  → さらに拡大
+175%  → さらに拡大
+200%  → 最大
+```
+
+が**実際の型紙表示にも正しく反映**されるようになりました。
+
+今回、ここまで正常動作確認済みです。
+
+---
+
+## 6. このズームは「画面表示専用」
+
+ここは今後コードを触るときにも重要です。
+
+今回追加した
+
+```tsx
+patternPreviewZoom
+```
+
+は、**型紙そのものの寸法を変更する機能ではありません。**
+
+そのため、
+
+```text
+型紙の実寸
+縫い代
+1cm方眼の基準
+SVG実寸
+PDF/印刷
+30mm × 30mm確認枠
+```
+
+などの計算には影響させていません。
+
+画面上で「ちょっと大きく見たい」「全体を小さくして確認したい」というためだけの機能です。
+
+画面にも、
+
+> ※画面表示のみ。型紙の実寸・印刷倍率には影響しません。
+
+という説明を入れています。
+
+この分離は今後も維持した方が安全です。
+
+---
+
+## 7. 現在の型紙機能の状態
+
+現時点では、平置き型紙について、
+
+- 1cm方眼表示
+- パーツごとの型紙表示
+- 寸法表示
+- 小さい型紙用の文字サイズ調整
+- 75〜200%の表示倍率変更
+- 100%へ戻す
+- SVG実寸出力
+- 印刷/PDF保存
+- 30mm × 30mm印刷倍率確認
+- A4等への印刷処理
+
+まで進んでいます。
+
+また、`PatternPreviewSvg` では実際の型紙サイズ計算と画面表示用ズームを分離した状態を維持しています。
+
+---
+
+# 今回の最終状態
+
+現在の表示倍率機能は、
+
+```text
+−  75% / 100% / 125% ...  ＋
+              ↓
+      patternPreviewZoom
+              ↓
+     画面表示だけ zoom
+              ↓
+型紙の実寸・PDF・SVGには影響しない
+```
+
+という構造です。
+
+**ここまで正常動作確認済みです。**
+
+今後はこの状態を基準にして、以前挙げた **「合印」「地の目線」「わ」「裁断枚数」などの実際に縫うときに必要な型紙情報**を順番に追加していくのが良さそうです。そこから先は、今動いている拡大縮小や寸法計算を壊さないよう、機能を1つずつ追加するのが安全です。
+
+
+
+
+
+
+
+
+
+もちろんです。ここで一度きれいに整理しておきましょう。今回の作業はかなり進んでいて、**平置き型紙の表示・印刷・寸法表示・拡大縮小まで一通り実用的な形になってきています。**
+
+# Pattern Studio｜ここまでの型紙機能まとめ
+
+## 1. 1cm方眼を追加
+
+平置き型紙の背景に、型紙サイズを把握しやすい**1cm方眼**を表示するようにしました。
+
+`PatternPreviewSvg.tsx` では現在このようなSVGパターンになっています。PatternPreviewSvg
+
+```tsx
+{!isOverlayMode && (
+    <defs>
+        <pattern
+            id="patternGrid"
+            width="10"
+            height="10"
+            patternUnits="userSpaceOnUse"
+        >
+            <path
+                d="M 10 0 L 0 0 0 10"
+                fill="none"
+                stroke="#ececec"
+                strokeWidth="0.5"
+            />
+        </pattern>
+    </defs>
+)}
+
+{!isOverlayMode && (
+    <rect
+        width="100%"
+        height="100%"
+        fill="url(#patternGrid)"
+        className="pattern-grid-rect"
+    />
+)}
+```
+
+これによって平置き型紙では方眼が見えます。
+
+---
+
+## 2. 30mm × 30mm 印刷倍率確認枠
+
+印刷時に実寸になっているか確認するため、
+
+**30mm × 30mm**
+
+の確認枠を追加しました。
+
+実際に紙へ印刷して確認し、
+
+> 30mm枠が見切れず印刷できる
+
+ところまで確認済みです。
+
+ここは今後も非常に重要で、印刷後に定規で30mmになっていることを確認すれば、100%実寸印刷のチェックに使えます。
+
+---
+
+## 3. 平置き型紙の自動配置を調整
+
+現在はカテゴリーによって、
+
+- 前身頃
+- 後身頃
+- 袖
+- スカート
+- ふんわりスカート
+- パンツ
+- 襟
+
+などを自動配置しています。
+
+特に「ワンピース（上下切替）」では、前身頃・後身頃・ふんわりスカート・袖を別パーツとして配置しています。
+
+現在の配置計算の中心部分がこちらです。PatternPreviewSvg
+
+```tsx
+let patternLeftX = 250;
+let patternRightX = 250;
+let patternCenterX = 250;
+
+let bodiceTopY = 100;
+let collarY = 180;
+let bottomPartsY = 260;
+let sleeveY = 340;
+```
+
+さらに、型紙サイズに応じて必要な表示領域も自動計算しています。
+
+---
+
+## 4. 型紙名・裁断枚数を表示
+
+各パーツに「これは何の型紙なのか」が分かる文字を付けました。
+
+たとえば前身頃は現在この構造です。PatternPreviewSvg
+
+```tsx
+<text
+    x={0}
+    y={frontTextY1}
+    textAnchor="middle"
+    fontSize={titleFontSize}
+    className="pattern-label-title"
+>
+    {isSeparatedOnePiece
+        ? "上半身前身頃 (わ)"
+        : isTee
+        ? "Tシャツ前身頃 (わ)"
+        : "前身頃 (わ)"}
+</text>
+
+<text
+    x={0}
+    y={frontTextY2}
+    textAnchor="middle"
+    fontSize={subFontSize}
+    className="pattern-label-sub"
+>
+    1枚裁断 {isWoven ? "(布帛)" : ""}
+</text>
+```
+
+「ワンピース（上下切替）」のスカートも、
+
+```text
+ふんわりスカート
+前後2枚裁断
+```
+
+と表示します。PatternPreviewSvg
+
+---
+
+## 5. 10cm・15cm・20cmなどで文字サイズを調整
+
+小さい型紙では文字が非常に読みにくかったため、ぬいサイズによって文字サイズを変更する仕組みにしました。
+
+現在はこちらです。PatternPreviewSvg
+
+```tsx
+const isSmallDoll =
+    size === "10cmぬい" ||
+    size === "ねんどろいどどーる";
+
+const isMidDoll =
+    size === "15cmぬい" ||
+    size === "20cmぬい";
+
+const titleFontSize =
+    isSmallDoll ? 4.5 :
+    isMidDoll ? 6.5 :
+    8.5;
+
+const subFontSize =
+    isSmallDoll ? 3.4 :
+    isMidDoll ? 5.0 :
+    6.8;
+
+const dimensionFontSize =
+    isSmallDoll ? 3.2 :
+    isMidDoll ? 4.5 :
+    6;
+
+const dimensionOffset =
+    isSmallDoll ? 7 : 10;
+```
+
+つまり全部を同じ文字サイズにせず、型紙サイズに合わせています。
+
+---
+
+## 6. 文字を型紙から離す処理
+
+以前は型紙名や「左右2枚裁断」などが型紙本体と重なるケースがありました。
+
+そのため、
+
+```tsx
+const labelGap =
+    isSmallDoll ? 18 :
+    isMidDoll ? 25 :
+    30;
+
+const labelLineGap =
+    isSmallDoll ? 7 :
+    isMidDoll ? 9 :
+    11;
+```
+
+というように、型紙とラベルの間隔を管理するようにしています。PatternPreviewSvg
+
+パンツについてもこの値を使って、
+
+```tsx
+y={pY_top - labelGap - labelLineGap}
+```
+
+と
+
+```tsx
+y={pY_top - labelGap}
+```
+
+で、「前パンツ／後パンツ」と「左右2枚裁断」を別々の高さにしています。PatternPreviewSvg
+
+---
+
+# 7. 寸法表示を追加
+
+ここも今回かなり重要な進歩です。
+
+現在、型紙上に実寸情報を表示できるようになっています。
+
+### 着丈
+
+前身頃の左側に、
+
+```text
+着丈 6.5cm
+```
+
+のような縦寸法を表示します。
+
+現在のコードはこちらです。PatternPreviewSvg
+
+```tsx
+<text
+    x={-(halfW + actualFlareOffset) - dimensionOffset - 3}
+    y={0}
+    textAnchor="middle"
+    fontSize={dimensionFontSize}
+    fill="#555"
+    transform={`rotate(
+        -90
+        ${-(halfW + actualFlareOffset) - dimensionOffset - 3}
+        0
+    )`}
+>
+    着丈 {length.toFixed(1)}cm
+</text>
+```
+
+---
+
+# 8. 身幅寸法を追加
+
+前身頃の下に横寸法線を追加しました。
+
+基準位置は、
+
+```tsx
+const frontBottomY = isSeparatedOnePiece
+    ? bodiceH * 0.5
+    : bodyH * 0.45;
+
+const frontWidthDimensionY =
+    frontBottomY + dimensionOffset;
+```
+
+となっています。PatternPreviewSvg
+
+寸法線は、
+
+```tsx
+<line
+    x1={-halfW}
+    y1={frontWidthDimensionY}
+    x2={halfW}
+    y2={frontWidthDimensionY}
+    stroke="#666"
+    strokeWidth="0.6"
+/>
+```
+
+という構造です。PatternPreviewSvg
+
+---
+
+# 9. 今回最後に直した「身幅 4.0cm」の重なり
+
+今回の最後の問題がここでした。
+
+以前は、
+
+```tsx
+y={frontWidthDimensionY - 4}
+```
+
+だったため、
+
+**「身幅 4.0cm」の文字が前身頃の型紙側へ入り込んでいました。**
+
+そこで文字だけを寸法線の下へ移動しました。
+
+### 変更前
+
+```tsx
+y={frontWidthDimensionY - 4}
+```
+
+### 現在
+
+```tsx
+y={frontWidthDimensionY + dimensionFontSize + 4}
+```
+
+完成形は、
+
+```tsx
+<text
+    x={0}
+    y={frontWidthDimensionY + dimensionFontSize + 4}
+    textAnchor="middle"
+    fontSize={dimensionFontSize}
+    fill="#555"
+>
+    身幅 {(bodyW / scale).toFixed(1)}cm
+</text>
+```
+
+です。
+
+これでユーザー確認でも**文字が重ならず表示されるようになりました。**
+
+---
+
+# 10. 「ワンピース（上下切替）」の文字配置
+
+ここも何度か調整しました。
+
+現在は、
+
+```text
+上半身前身頃（わ）
+1枚裁断
+
+【上半身型紙】
+
+【身幅寸法線】
+身幅 4.0cm
+
+ふんわりスカート
+前後2枚裁断
+
+【スカート型紙】
+```
+
+という順番になるよう整理しています。
+
+「ふんわりスカート」と「前後2枚裁断」はスカート側の座標を使っています。
+
+```tsx
+const skirtSepTextY1 = skirtSepTopY - 14;
+const skirtSepTextY2 = skirtSepTopY - 6;
+```
+
+PatternPreviewSvg
+
+これで「身幅」とスカート名を別々に管理できます。
+
+---
+
+# 11. 袖丈表示
+
+袖についても、
+
+```tsx
+袖丈 {sleeve.toFixed(1)}cm
+```
+
+を表示するようになっています。
+
+ワンピース（上下切替）では位置を別計算しています。PatternPreviewSvg
+
+```tsx
+y={
+    isSeparatedOnePiece
+        ? bodiceH * 0.5 + dimensionOffset
+        : bodyH * 0.45 + dimensionOffset - 2
+}
+```
+
+---
+
+# 12. 平置き型紙の表示倍率
+
+これも今回かなり使いやすくなった部分です。
+
+画面上で、
+
+```text
+表示倍率：
+－  100%  ＋  100%に戻す
+```
+
+という操作を追加しました。
+
+確認済みの動作として、
+
+```text
+75%
+100%
+125%
+200%
+```
+
+などへ拡大・縮小できます。
+
+重要なのは、
+
+**画面表示だけを拡大・縮小して、型紙そのものの実寸や印刷倍率には影響させない**
+
+という設計にしたことです。
+
+最初は倍率を変更しても型紙がほとんど拡大されない問題がありましたが、修正後はユーザー確認で、
+
+> しっかり拡大縮小できました！
+
+まで確認済みです。
+
+---
+
+# 13. 完成シルエットと平置き型紙を分離
+
+現在、
+
+```text
+完成シルエット（写真に重ねる）
+平置き型紙（パーツ展開）
+```
+
+の2つの表示モードがあります。
+
+`PatternPreviewSvg.tsx` でも、
+
+```tsx
+{isOverlayMode ? (
+    <g id="finished-clothing-silhouette">
+```
+
+と、
+
+```tsx
+) : (
+    <g id="flat-pattern-pieces">
+```
+
+で処理を完全に分けています。PatternPreviewSvg PatternPreviewSvg
+
+そのため、平置き型紙側を調整しても完成シルエットへ影響しにくい構造になっています。
+
+---
+
+# 現在確認できている状態
+
+現時点では、かなり重要なところまで確認できています。
+
+- **型紙本体が表示される**
+- **前身頃・後身頃・袖などが消えない**
+- **1cm方眼が表示される**
+- **30mm × 30mm印刷倍率確認枠が見切れない**
+- **実際の紙への印刷も成功**
+- **着丈を表示できる**
+- **身幅を表示できる**
+- **袖丈を表示できる**
+- **裁断枚数を表示できる**
+- **平置き型紙を画面だけ拡大・縮小できる**
+- **ボトムスの文字重なりを改善**
+- **ワンピース（上下切替）の文字重なりを改善**
+- **今回「身幅4.0cm」の重なりも解消**
+
+ここまで来たので、**文字位置の修正ばかりを続ける段階から、次の型紙機能へ進める状態**になってきました。
+
+## 次に進めたい機能
+
+次は以前お話ししていた、
+
+**「合印（ノッチ）」**
+
+へ進むのがいいと思います。
+
+たとえば前身頃・後身頃・袖に、
+
+```text
+      ▼ 合印
+
+   ┌────────┐
+  /          \
+ /            \
+│              │
+```
+
+のような小さな印を入れて、
+
+**「この位置とこの位置を合わせて縫う」**
+
+ことが分かる型紙にします。
+
+その次に、
+
+**地の目線 →「わ」の表示強化 → 裁断枚数整理 → 印刷用チェック機能**
+
+と進めると、単に「形を出す型紙」ではなく、**実際に裁断・縫製するときに使いやすい型紙**へかなり近づきます。
+
+なお、今後も変更後のVercel反映は基本的に、
+
+```bash
+git status
+git add .
+git commit -m "変更内容"
+git push
+```
+
+でOKです。`git push` 後にVercelの最新Deploymentが **Ready** になったら本番環境で確認、という流れで進めましょう。
+
+
+
+
+
+
+
+
+もちろんです。ここまでかなり大きく進んだので、**Pattern Studioの「平置き型紙・印刷・JPEG/PNG保存」について、現在の完成状態と重要コードを一度整理**しておきます。
+
+このまとめを基準点にして、次の機能追加へ進めれば安全です。
+
+# Pattern Studio 型紙機能｜ここまでの作業まとめ
+
+## 1. 現在できていること
+
+現在の平置き型紙では、主に次のところまで実装・修正できています。
+
+- 平置き型紙の表示
+- 1cm方眼背景
+- 型紙の寸法表示
+- 型紙名の表示
+- 裁断枚数の表示
+- 表示倍率の拡大・縮小
+- 100%へ戻す機能
+- PDF印刷
+- 大きな型紙の自動分割印刷
+- 30mm × 30mm実寸確認枠
+- JPEG保存
+- PNG保存
+- 型紙と文字が重ならないよう配置調整
+- PDF / JPEG / PNGで型紙が欠けないよう書き出し処理を修正
+
+特に今回、最後まで問題になっていた**PDFとJPEG/PNGで結果が違う問題**もかなり揃いました。
+
+---
+
+# 2. 1cm方眼
+
+平置き型紙の背景に方眼を表示するようにしました。
+
+基本的な考え方はSVGの`pattern`です。
+
+```tsx
+<defs>
+    <pattern
+        id="grid-10mm"
+        width="10"
+        height="10"
+        patternUnits="userSpaceOnUse"
+    >
+        <path
+            d="M 10 0 L 0 0 0 10"
+            fill="none"
+            stroke="#c59c52"
+            strokeWidth="0.4"
+        />
+    </pattern>
+</defs>
+
+<rect
+    className="pattern-grid-rect"
+    x="0"
+    y="0"
+    width="100%"
+    height="100%"
+    fill="url(#grid-10mm)"
+/>
+```
+
+画面では方眼を確認できますが、書き出し時には必要に応じて、
+
+```tsx
+const gridRect = clone.querySelector(".pattern-grid-rect");
+
+if (gridRect) {
+    gridRect.remove();
+}
+```
+
+のように除外できる構造です。
+
+---
+
+# 3. 寸法表示
+
+型紙には、
+
+```text
+着丈 6.5cm
+身幅 4.0cm
+袖丈 3.0cm
+```
+
+などの寸法を表示できるようにしました。
+
+単純に文字を置くだけではなく、
+
+```tsx
+<line ... />
+<line ... />
+<text ...>
+    身幅 {width}cm
+</text>
+```
+
+というように、**寸法線＋寸法文字**として表示しています。
+
+ここでかなり調整したのが、文字と型紙の重なりです。
+
+---
+
+# 4. ワンピース（上下切替）の文字配置
+
+ここは何度も調整しました。
+
+最初は、
+
+```text
+上半身前身頃
+↓
+ふんわりスカート
+↓
+前後2枚裁断
+↓
+身幅4.0cm
+```
+
+などが重なっていました。
+
+最終的には役割ごとに分離して、
+
+```text
+上半身前身頃（わ）
+1枚裁断
+
+［上半身型紙］
+
+──────
+身幅 4.0cm
+
+
+ふんわりスカート
+前後2枚裁断
+
+［スカート型紙］
+```
+
+という配置にしています。
+
+現在のJPEG/PNGでも、
+
+**身幅4.0cm → ふんわりスカート → 前後2枚裁断 → スカート型紙**
+
+がきれいに分離されています。
+
+---
+
+# 5. 裁断枚数
+
+各型紙に必要な裁断枚数を表示しています。
+
+現在の例では、
+
+```text
+上半身前身頃（わ）
+1枚裁断
+```
+
+```text
+上半身後身頃
+左右2枚（背開き）
+```
+
+```text
+ふんわりスカート
+前後2枚裁断
+```
+
+```text
+袖
+左右2枚裁断
+```
+
+という表示になっています。
+
+型紙を印刷してから「何枚切るんだっけ？」となりにくい形です。
+
+---
+
+# 6. 平置き型紙の拡大・縮小
+
+途中で追加した大きな機能です。
+
+画面上に、
+
+```text
+表示倍率：
+
+－   100%   ＋   100%に戻す
+```
+
+を追加しました。
+
+倍率を変更しても、
+
+**型紙そのものの実寸・PDF印刷倍率には影響しない**
+
+仕様にしています。
+
+つまり、
+
+```text
+75%
+100%
+125%
+150%
+200%
+```
+
+などに変更しても、単純に画面で確認しやすくなるだけです。
+
+表示用倍率の考え方は、
+
+```tsx
+const [previewZoom, setPreviewZoom] = useState(100);
+```
+
+のようなstateを持たせ、
+
+```tsx
+transform: `scale(${previewZoom / 100})`
+```
+
+などで画面表示だけを拡大する方式です。
+
+そして、
+
+```tsx
+setPreviewZoom(100);
+```
+
+で100%へ戻します。
+
+---
+
+# 7. 30mm × 30mm印刷倍率確認枠
+
+印刷用紙の右上に、
+
+```text
+印刷倍率確認用
+
+30mm × 30mm
+
+※定規で3cmか確認
+```
+
+という確認枠を設置しました。
+
+最初は右側が切れていました。
+
+さらに実際に印刷して定規で測ったところ、30mmよりわずかに小さい状態も確認しました。
+
+そこから印刷レイアウトと余白を何度も調整し、最終的に、
+
+**30mm確認枠が切れずに印刷できる状態**
+
+まで修正しました。
+
+ここは今後なるべく触らない部分です。
+
+---
+
+# 8. PDF印刷の1ページ表示
+
+小さい型紙については、
+
+```text
+前身頃
+後身頃
+袖
+スカート
+```
+
+などを可能な限り**1枚のA4にまとめて印刷**できるようにしています。
+
+以前、一度修正した際に、
+
+```text
+前身頃 → 1ページ
+後身頃 → 1ページ
+袖 → 1ページ
+```
+
+のようにバラバラになってしまいました。
+
+そこを戻して、現在は小さい型紙なら1ページにまとまります。
+
+---
+
+# 9. 大きい型紙の自動分割
+
+一方、A4に入らない型紙は自動分割します。
+
+ここで大きな問題が発生していました。
+
+MDDのボトムスなどで、
+
+```text
+型紙が表示されない
+左端に線だけ出る
+中央に一部分しか表示されない
+ほぼ白紙
+```
+
+という症状です。
+
+原因はSVGの座標系でした。
+
+型紙グループには、
+
+```tsx
+<g
+    id="piece-pants"
+    transform={`translate(${patternCenterX}, ${pCenterY})`}
+>
+```
+
+のような`transform`が付いています。
+
+一方、自動分割では`getBBox()`による**ローカル座標**を使用しています。
+
+そのため、
+
+```text
+viewBox
+→ ローカル座標
+
+型紙
+→ translate後の座標
+```
+
+というズレが発生していました。
+
+---
+
+# 10. PDF自動分割の重要修正
+
+そこで、個別パーツを書き出すときは、
+
+```tsx
+const clone = sourceNode.cloneNode(true) as SVGGraphicsElement;
+
+if (isSubPiece) {
+    clone.removeAttribute("transform");
+}
+```
+
+としました。
+
+そして、
+
+```tsx
+const svgPieceMarkup = `
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="${cropX} ${cropY} ${cropW} ${cropH}"
+        width="${cropW}mm"
+        height="${cropH}mm"
+        style="
+            width:${cropW}mm;
+            height:${cropH}mm;
+            display:block;
+            overflow:hidden;
+        "
+    >
+        ${serializer.serializeToString(clone)}
+    </svg>
+`;
+```
+
+としています。
+
+これによって、
+
+```text
+getBBox()
+↓
+ローカル座標
+
+cropX / cropY
+↓
+ローカル座標
+
+clone
+↓
+translateを削除
+
+viewBox
+↓
+ローカル座標
+```
+
+と、**全部同じ座標系**になりました。
+
+その結果、PDF自動分割でも型紙が正常に表示されるようになりました。
+
+---
+
+# 11. PDF切り抜きの余白
+
+現在は型紙本体だけでなく、
+
+- 型紙名
+- 裁断枚数
+- 寸法線
+- 寸法文字
+
+も含めるため、
+
+```tsx
+groupBBox = el.getBBox();
+```
+
+を利用しています。
+
+余白については、
+
+```tsx
+const padX = 12;
+const padYTop = 16;
+const padYBottom = 12;
+```
+
+という基準に揃えました。
+
+そして、
+
+```tsx
+const cropX = groupBBox.x - padX;
+const cropY = groupBBox.y - padYTop;
+const cropW = groupBBox.width + padX * 2;
+const cropH = groupBBox.height + padYTop + padYBottom;
+```
+
+という考え方で切り抜いています。
+
+---
+
+# 12. JPEG / PNGで起きていた問題
+
+PDFが直ったあとも、
+
+```text
+PDF → 正常
+
+JPEG → 崩れる
+PNG → 崩れる
+```
+
+という状態が残っていました。
+
+理由は、
+
+```tsx
+if (exportFormat === "PRINT") {
+```
+
+のPDF処理と、
+
+```tsx
+// 3. JPEG / PNG 保存
+```
+
+が**別々の書き出し処理**だったからです。
+
+JPEG/PNG側では、
+
+```text
+SVG
+↓
+Image
+↓
+Canvas
+↓
+JPEG / PNG
+```
+
+という処理をしています。
+
+そのためPDFで直しただけではJPEG/PNGには反映されませんでした。
+
+---
+
+# 13. JPEG / PNGの切り抜き修正
+
+以前は、JPEG/PNG側で最初の`path`だけを基準にする処理がありました。
+
+これだと、
+
+```text
+型紙本体
+```
+
+は入っても、
+
+```text
+型紙名
+裁断枚数
+寸法線
+寸法文字
+```
+
+が範囲外になる可能性があります。
+
+そこで、型紙グループ全体を見るようにしました。
+
+```tsx
+let groupBBox = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+};
+
+try {
+    const bb = pieceNode.getBBox();
+
+    groupBBox = {
+        x: bb.x,
+        y: bb.y,
+        width: bb.width,
+        height: bb.height
+    };
+} catch {}
+
+if (
+    groupBBox.width <= 0 ||
+    groupBBox.height <= 0
+) {
+    if (isLast) {
+        setIsExporting(false);
+    }
+    return;
+}
+
+const baseBox = groupBBox;
+```
+
+これがかなり重要です。
+
+つまり、
+
+```text
+pathだけを見る
+```
+
+から、
+
+```text
+piece-front全体
+piece-back全体
+piece-sleeve全体
+piece-skirt全体
+piece-pants全体
+```
+
+を見る方式に変更しました。
+
+---
+
+# 14. JPEG / PNGもPDFと同じ余白へ統一
+
+JPEG/PNG側も、
+
+```tsx
+const padX = 12;
+const padYTop = 16;
+const padYBottom = 12;
+```
+
+へ統一しました。
+
+そのため現在は、
+
+```tsx
+const baseBox = groupBBox;
+
+if (baseBox.width === 0 || baseBox.height === 0) {
+    if (isLast) setIsExporting(false);
+    return;
+}
+
+const padX = 12;
+const padYTop = 16;
+const padYBottom = 12;
+
+const pieceW_mm = baseBox.width + padX * 2;
+const pieceH_mm = baseBox.height + padYTop + padYBottom;
+```
+
+という考え方になっています。
+
+JPEG/PNG側でも個別パーツなら、
+
+```tsx
+const clone = sourceNode.cloneNode(true) as SVGGraphicsElement;
+
+if (isSubPiece) {
+    clone.removeAttribute("transform");
+}
+```
+
+を残しています。
+
+これもPDF自動分割と同じ座標処理です。
+
+---
+
+# 15. 現在の最終確認結果
+
+今回の最新画像で、
+
+### PDF
+
+正常です。
+
+```text
+上半身前身頃
+上半身後身頃
+ふんわりスカート
+袖
+寸法表示
+裁断枚数
+30mm確認枠
+```
+
+すべて表示されています。
+
+### JPEG
+
+正常です。
+
+型紙の欠けや文字の重なりは、今回の確認画像では見られません。
+
+### PNG
+
+こちらも正常です。
+
+JPEGとほぼ同じ配置で書き出されています。
+
+つまり現在、
+
+```text
+画面プレビュー
+       ↓
+PDF
+       ↓
+JPEG
+       ↓
+PNG
+```
+
+で、かなり同じ状態に揃ってきています。
+
+---
+
+# 現在「触らない方がいい」部分
+
+ここは重要です。
+
+現時点で正常になった、
+
+```text
+PDFのA4レイアウト
+30mm確認枠
+PDF自動分割
+PDFのtransform処理
+JPEG/PNGのgroupBBox
+JPEG/PNGのtransform処理
+padX = 12
+padYTop = 16
+padYBottom = 12
+```
+
+については、**次の機能追加では基本的に触らない**ようにしましょう。
+
+せっかく安定した書き出し処理なので、ここを基準にします。
+
+---
+
+# 今後の型紙機能
+
+最初に予定していた7項目は、
+
+```text
+① 1cm方眼
+② 寸法表示
+③ 合印
+④ 地の目線
+⑤ 「わ」
+⑥ 裁断枚数
+⑦ 30mm実寸チェック
+```
+
+でした。
+
+このうち現在、
+
+**① 1cm方眼 → 実装済み  
+② 寸法表示 → 実装済み  
+⑥ 裁断枚数 → 実装済み  
+⑦ 30mm実寸チェック → 実装・実印刷確認済み**
+
+まで進んでいます。
+
+したがって、次に本格的に進めたいのは、
+
+**③ 合印  
+④ 地の目線  
+⑤「わ」**
+
+です。
+
+次はこの3つのうち、まず**③「合印」**から進めるのがいいと思います。
+
+そのときも、
+
+```text
+どのファイルを開く
+↓
+どのコードを検索する
+↓
+そのコードの上・下どちらへ入れる
+↓
+追加するコード
+↓
+Vercel再ビルド
+↓
+確認する場所
+```
+
+という今までのやり方で、**1か所ずつ進めましょう。**
+
+最後に、現在のVercel更新方法も引き続き同じです。
+
+```bash
+git status
+git add .
+git commit -m "変更内容"
+git push
+```
+
+`git push` 後、Vercelの **Deployments → 最新のDeployment → Ready** を確認して本番サイトを再読み込みします。
+
+ここまでで、Pattern Studioは単なる型紙表示から、**実寸確認・寸法・裁断情報・印刷・分割印刷・画像保存まで扱えるところまで来ています。** 次は縫製時に実際に役立つ「合印・地の目線・わ」を載せていく段階です。
