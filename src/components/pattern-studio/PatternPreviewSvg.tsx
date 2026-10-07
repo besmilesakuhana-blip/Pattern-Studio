@@ -871,11 +871,12 @@ const sleeveBackNotchY2 =
                                     strokeLinejoin="round"
                                 />
 
-{/* 合印：後身頃 右脇 */}
+{/* 合印：後身頃 右脇 2個 */}
 <g
     className="pattern-notch"
     transform={`translate(${backNotchX}, ${backNotchY})`}
 >
+    {/* 1個目 */}
     <path
         d={`
             M 0 ${-notchSize}
@@ -888,8 +889,22 @@ const sleeveBackNotchY2 =
         strokeLinejoin="round"
         strokeLinecap="round"
     />
-</g>
 
+    {/* 2個目 */}
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        transform={`translate(0, ${notchSize * 2.2})`}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
 
 
 
