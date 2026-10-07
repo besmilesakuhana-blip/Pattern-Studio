@@ -405,6 +405,18 @@ const skirtSepTextY2 = skirtSepTopY - 16;
 
 
 
+const frontBottomY = isSeparatedOnePiece
+    ? bodiceH * 0.5
+    : bodyH * 0.45;
+
+const frontWidthDimensionY =
+    frontBottomY + dimensionOffset;
+
+
+
+
+
+
     const viewBoxStr = isOverlayMode ? "0 0 500 500" : `0 0 ${maxPatternWidth} ${maxPatternHeight}`;
     const svgStyle = isOverlayMode ? { width: "100%", height: "100%" } : { width: `${maxPatternWidth}px`, height: `${maxPatternHeight}px` };
 
@@ -699,34 +711,34 @@ const skirtSepTextY2 = skirtSepTopY - 16;
 <g className="pattern-dimension">
     <line
         x1={-halfW}
-        y1={bodyH * 0.45 + dimensionOffset}
+        y1={frontWidthDimensionY}
         x2={halfW}
-        y2={bodyH * 0.45 + dimensionOffset}
+        y2={frontWidthDimensionY}
         stroke="#666"
         strokeWidth="0.6"
     />
 
     <line
         x1={-halfW}
-        y1={bodyH * 0.45 + dimensionOffset - 2}
+        y1={frontWidthDimensionY - 2}
         x2={-halfW}
-        y2={bodyH * 0.45 + dimensionOffset + 2}
+        y2={frontWidthDimensionY + 2}
         stroke="#666"
         strokeWidth="0.6"
     />
 
     <line
         x1={halfW}
-        y1={bodyH * 0.45 + dimensionOffset - 2}
+        y1={frontWidthDimensionY - 2}
         x2={halfW}
-        y2={bodyH * 0.45 + dimensionOffset + 2}
+        y2={frontWidthDimensionY + 2}
         stroke="#666"
         strokeWidth="0.6"
     />
 
     <text
         x={0}
-        y={bodyH * 0.45 + dimensionOffset - 2}
+        y={frontWidthDimensionY - 2}
         textAnchor="middle"
         fontSize={dimensionFontSize}
         fill="#555"
