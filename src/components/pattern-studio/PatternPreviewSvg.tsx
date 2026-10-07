@@ -738,7 +738,7 @@ const frontWidthDimensionY =
 
  <text
     x={0}
-    y={frontWidthDimensionY - 4}
+   y={frontWidthDimensionY + dimensionFontSize + 4}
     textAnchor="middle"
     fontSize={dimensionFontSize}
     fill="#555"
