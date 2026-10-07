@@ -604,24 +604,41 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
 
    const clone = sourceNode.cloneNode(true) as SVGGraphicsElement;
 
-// 印刷時も元SVGの座標関係を維持する
-// transform は削除しない
+// --------------------------------------------------
+// 個別パーツを書き出す場合
+// 親SVG上での translate() を外して、
+// パーツ内部のローカル座標で切り抜く
+// --------------------------------------------------
+if (isSubPiece) {
+    clone.removeAttribute("transform");
+}
 
 
 
 
 
-
-
-               const svgPieceMarkup = `
+const svgPieceMarkup = `
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="${cropX} ${cropY} ${cropW} ${cropH}"
-        style="width:${cropW}mm; height:${cropH}mm; display:block; overflow:hidden;"
+        width="${cropW}mm"
+        height="${cropH}mm"
+        style="
+            width:${cropW}mm;
+            height:${cropH}mm;
+            display:block;
+            overflow:hidden;
+        "
     >
         ${serializer.serializeToString(clone)}
     </svg>
 `;
+
+
+
+
+
+
 
                 return `
                     <div class="sheet-page">
@@ -1040,21 +1057,47 @@ const [patternPreviewZoom, setPatternPreviewZoom] = useState(1);
             pieceName: string,
             isLast: boolean
         ) => {
-            const pathElem = pieceNode.querySelector("path");
-            let pathBBox = { x: 0, y: 0, width: 0, height: 0 };
-            if (pathElem) {
-                try {
-                    const pb = pathElem.getBBox();
-                    pathBBox = { x: pb.x, y: pb.y, width: pb.width, height: pb.height };
-                } catch {}
-            }
 
-            let groupBBox = { x: 0, y: 0, width: 0, height: 0 };
-            try {
-                groupBBox = pieceNode.getBBox();
-            } catch {}
 
-            const baseBox = (pathBBox.width > 0) ? pathBBox : groupBBox;
+
+let groupBBox = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+};
+
+try {
+    const bb = pieceNode.getBBox();
+
+    groupBBox = {
+        x: bb.x,
+        y: bb.y,
+        width: bb.width,
+        height: bb.height
+    };
+} catch {}
+
+if (
+    groupBBox.width <= 0 ||
+    groupBBox.height <= 0
+) {
+    if (isLast) {
+        setIsExporting(false);
+    }
+    return;
+}
+
+// 型紙本体だけではなく
+// タイトル・裁断枚数・寸法線・寸法文字を全部含める
+const baseBox = groupBBox;
+
+
+
+
+
+
+
             if (baseBox.width === 0 || baseBox.height === 0) {
                 if (isLast) setIsExporting(false);
                 return;
