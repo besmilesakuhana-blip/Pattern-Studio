@@ -397,8 +397,8 @@ const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
 
 
 
-   const skirtSepTextY1 = skirtSepTopY - 14;
-const skirtSepTextY2 = skirtSepTopY - 6;
+  const skirtSepTextY1 = skirtSepTopY - 26;
+const skirtSepTextY2 = skirtSepTopY - 16;
 
 
 
