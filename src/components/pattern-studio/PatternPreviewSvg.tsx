@@ -327,9 +327,9 @@ const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
 
 
 
-      bottomPartsY = collarType !== "襟なし"
-    ? collarY + cH_val + (isSmallDoll ? 35 : 55)
-    : bodiceBottomY + (isSmallDoll ? 35 : 55);
+     bottomPartsY = collarType !== "襟なし"
+    ? collarY + cH_val + (isSmallDoll ? 45 : 55)
+    : bodiceBottomY + (isSmallDoll ? 45 : 55);
 
 
 
@@ -397,8 +397,8 @@ const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
 
 
 
-  const skirtSepTextY1 = skirtSepTopY - 26;
-const skirtSepTextY2 = skirtSepTopY - 16;
+const skirtSepTextY1 = skirtSepTopY - 14;
+const skirtSepTextY2 = skirtSepTopY - 6;
 
 
 
@@ -736,15 +736,15 @@ const frontWidthDimensionY =
         strokeWidth="0.6"
     />
 
-    <text
-        x={0}
-        y={frontWidthDimensionY - 2}
-        textAnchor="middle"
-        fontSize={dimensionFontSize}
-        fill="#555"
-    >
-        身幅 {(bodyW / scale).toFixed(1)}cm
-    </text>
+ <text
+    x={0}
+    y={frontWidthDimensionY - 4}
+    textAnchor="middle"
+    fontSize={dimensionFontSize}
+    fill="#555"
+>
+    身幅 {(bodyW / scale).toFixed(1)}cm
+</text>
 </g>
 
 
