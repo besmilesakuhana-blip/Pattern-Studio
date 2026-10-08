@@ -478,6 +478,56 @@ const sleeveBackNotchY2 =
 
 
     const viewBoxStr = isOverlayMode ? "0 0 500 500" : `0 0 ${maxPatternWidth} ${maxPatternHeight}`;
+
+
+
+
+
+
+// =====================================
+// 地の目線（上下矢印付き）
+// =====================================
+const GrainlineMark = ({
+    x,
+    y1,
+    y2,
+}: {
+    x: number;
+    y1: number;
+    y2: number;
+}) => (
+    <g className="pattern-grainline">
+        <line
+            x1={x}
+            y1={y1}
+            x2={x}
+            y2={y2}
+            stroke="#777"
+            strokeWidth="0.8"
+        />
+
+        <path
+            d={`M ${x - 3} ${y1 + 5} L ${x} ${y1} L ${x + 3} ${y1 + 5}`}
+            fill="none"
+            stroke="#777"
+            strokeWidth="0.8"
+        />
+
+        <path
+            d={`M ${x - 3} ${y2 - 5} L ${x} ${y2} L ${x + 3} ${y2 - 5}`}
+            fill="none"
+            stroke="#777"
+            strokeWidth="0.8"
+        />
+    </g>
+);
+
+
+
+
+
+
+
     const svgStyle = isOverlayMode ? { width: "100%", height: "100%" } : { width: `${maxPatternWidth}px`, height: `${maxPatternHeight}px` };
 
     return (
@@ -725,6 +775,32 @@ const sleeveBackNotchY2 =
 
 
 {/* 合印：前身頃 右脇 */}
+
+
+
+
+
+{/* 前身頃：中心線 */}
+<g className="pattern-centerline">
+    <line
+        x1={0}
+        y1={frontTopY + neckCurvature + 12}
+        x2={0}
+        y2={frontBottomY - 5}
+        stroke="#888"
+        strokeWidth="0.7"
+        strokeDasharray="3 3"
+    />
+</g>
+
+
+
+
+
+
+
+
+
 <g
     className="pattern-notch"
     transform={`translate(${frontNotchX}, ${frontNotchY})`}
@@ -872,6 +948,24 @@ const sleeveBackNotchY2 =
                                 />
 
 {/* 合印：後身頃 右脇 2個 */}
+
+
+
+
+
+
+{/* 後身頃：地の目線 */}
+<GrainlineMark
+    x={halfW * 0.48}
+    y1={backTopY + 15}
+    y2={backBottomY - 12}
+/>
+
+
+
+
+
+
 <g
     className="pattern-notch"
     transform={`translate(${backNotchX}, ${backNotchY})`}
@@ -999,6 +1093,25 @@ const sleeveBackNotchY2 =
 
 
 {/* 合印：袖 前側 1個 */}
+
+
+
+
+
+{/* 袖：地の目線 */}
+<GrainlineMark
+    x={0}
+    y1={sleeveTopY + 12}
+    y2={sleeveBodyH / 2 - 8}
+/>
+
+
+
+
+
+
+
+
 <g
     className="pattern-notch"
     transform={`translate(${sleeveFrontNotchX}, ${sleeveNotchY})`}
@@ -1114,6 +1227,30 @@ const sleeveBackNotchY2 =
 
 
 {/* 合印：袖 前側 1個 */}
+
+
+
+
+
+{/* 袖：地の目線 */}
+<GrainlineMark
+    x={0}
+    y1={sleeveTopY + 12}
+    y2={sleeveBodyH / 2 - 8}
+/>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <g
     className="pattern-notch"
     transform={`translate(${sleeveFrontNotchX}, ${sleeveNotchY})`}
