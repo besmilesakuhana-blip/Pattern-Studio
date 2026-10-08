@@ -469,7 +469,7 @@ const sleeveBackNotchX =
 
 // 後側の2個目を少し下へずらす
 const sleeveBackNotchY2 =
-    sleeveNotchY + notchSize * 2.2;
+    sleeveNotchY + notchSize * 3.2;
 
 
 
@@ -1041,7 +1041,7 @@ const sleeveBackNotchY2 =
             L ${-notchSize} 0
             L 0 ${notchSize}
         `}
-        transform={`translate(0, ${notchSize * 2.2})`}
+        transform={`translate(0, ${notchSize * 3.2})`}
         fill="none"
         stroke="#222"
         strokeWidth="1"
