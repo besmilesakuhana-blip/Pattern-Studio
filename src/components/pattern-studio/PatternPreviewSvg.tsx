@@ -910,45 +910,7 @@ const GrainlineMark = ({
 
 
 
-{/* 寸法表示：前身頃 身幅 */}
-<g className="pattern-dimension">
-    <line
-        x1={-halfW}
-        y1={frontWidthDimensionY}
-        x2={halfW}
-        y2={frontWidthDimensionY}
-        stroke="#666"
-        strokeWidth="0.6"
-    />
 
-    <line
-        x1={-halfW}
-        y1={frontWidthDimensionY - 2}
-        x2={-halfW}
-        y2={frontWidthDimensionY + 2}
-        stroke="#666"
-        strokeWidth="0.6"
-    />
-
-    <line
-        x1={halfW}
-        y1={frontWidthDimensionY - 2}
-        x2={halfW}
-        y2={frontWidthDimensionY + 2}
-        stroke="#666"
-        strokeWidth="0.6"
-    />
-
- <text
-    x={0}
-   y={frontWidthDimensionY + dimensionFontSize + 4}
-    textAnchor="middle"
-    fontSize={dimensionFontSize}
-    fill="#555"
->
-    身幅 {(bodyW / scale).toFixed(1)}cm
-</text>
-</g>
 
 
 
