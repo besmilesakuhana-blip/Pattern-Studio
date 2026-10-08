@@ -774,7 +774,7 @@ const GrainlineMark = ({
                             <g id="piece-front" transform={`translate(${patternLeftX}, ${bodiceTopY})`}>
                                 {seamStrokeWidth > 0 && (
                                     <path
-                                        d={frontBodicePath}
+                                        d={frontSeamPath}
                                         fill="none"
                                         stroke="#c59c52"
                                         strokeWidth={seamStrokeWidth}
