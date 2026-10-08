@@ -405,8 +405,14 @@ const frontBodicePath = isSeparatedOnePiece ? `
     const backTextY2 = isBackNarrow ? (backTopY - 3) : (titleFontSize + 3);
     const backTextX = isBackNarrow ? (halfW * 0.25) : (halfW * 0.35);
 
-    const frontTextY1 = isSmallDoll ? (frontTopY - 11) : -4;
-    const frontTextY2 = isSmallDoll ? (frontTopY - 3) : (titleFontSize + 2);
+
+
+
+   const frontTextY1 = frontTopY - labelGap;
+const frontTextY2 = frontTextY1 + labelLineGap;
+
+
+
 
     const sleeveTextY1 = isSmallDoll ? (sleeveTopY - 11) : -2;
     const sleeveTextY2 = isSmallDoll ? (sleeveTopY - 3) : (titleFontSize + 3);
@@ -810,15 +816,15 @@ const GrainlineMark = ({
         strokeWidth="0.8"
     />
 
-    <text
-        x={-6}
-        y={(frontTopY + frontBottomY) / 2}
-        textAnchor="middle"
-        fontSize={subFontSize}
-        fill="#555"
-    >
-        わ
-    </text>
+  <text
+    x={-12}
+    y={(frontTopY + frontBottomY) / 2}
+    textAnchor="middle"
+    fontSize={subFontSize}
+    fill="#555"
+>
+    わ
+</text>
 </g>
 
 
@@ -857,7 +863,7 @@ const GrainlineMark = ({
                                     {isSeparatedOnePiece ? "上半身前身頃 (わ)" : isTee ? "Tシャツ前身頃 (わ)" : "前身頃 (わ)"}
                                 </text>
                                 <text x={halfW * 0.5} y={frontTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">
-                                    1枚裁断 {isWoven ? "(布帛)" : ""}
+                                  わで1枚裁断 {isWoven ? "(布帛)" : ""}
                                 </text>
 
 
