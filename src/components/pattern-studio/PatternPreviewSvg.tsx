@@ -897,7 +897,7 @@ const sleeveBackNotchY2 =
             L ${-notchSize} 0
             L 0 ${notchSize}
         `}
-        transform={`translate(0, ${notchSize * 2.2})`}
+        transform={`translate(0, ${notchSize * 3.2})`}
         fill="none"
         stroke="#222"
         strokeWidth="1"
@@ -1156,7 +1156,7 @@ const sleeveBackNotchY2 =
             L ${-notchSize} 0
             L 0 ${notchSize}
         `}
-        transform={`translate(0, ${notchSize * 2.2})`}
+        transform={`translate(0, ${notchSize * 3.2})`}
         fill="none"
         stroke="#222"
         strokeWidth="1"
