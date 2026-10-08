@@ -164,27 +164,44 @@ const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
         Z
     `;
 
-    const frontBodicePath = isSeparatedOnePiece ? `
-        M ${-neckHalfW} ${-(bodiceH * 0.5)}
-        Q 0 ${-(bodiceH * 0.5) + neckCurvature + 8} ${neckHalfW} ${-(bodiceH * 0.5)}
-        L ${shoulderW} ${-(bodiceH * 0.5) + shoulderDrop}
-        Q ${(shoulderW + halfW) * 0.48} ${-(bodiceH * 0.5) + armholeDepth * 0.6} ${halfW} ${-(bodiceH * 0.5) + armholeDepth}
-        L ${halfW - actualWaistIndent * 0.4} ${(bodiceH * 0.5)}
-        L ${-(halfW - actualWaistIndent * 0.4)} ${(bodiceH * 0.5)}
-        L ${-halfW} ${-(bodiceH * 0.5) + armholeDepth}
-        Q ${-(shoulderW + halfW) * 0.48} ${-(bodiceH * 0.5) + armholeDepth * 0.6} ${-shoulderW} ${-(bodiceH * 0.5) + shoulderDrop}
-        Z
-    ` : `
-        M ${-neckHalfW} ${-(bodyH * 0.45)}
-        Q 0 ${-(bodyH * 0.45) + neckCurvature + (isTee ? 4 : 8)} ${neckHalfW} ${-(bodyH * 0.45)}
-        L ${shoulderW} ${-(bodyH * 0.45) + shoulderDrop}
-        Q ${(shoulderW + halfW) * 0.48} ${-(bodyH * 0.45) + armholeDepth * 0.6} ${halfW} ${-(bodyH * 0.45) + armholeDepth}
-        Q ${halfW - actualWaistIndent} 0 ${halfW + actualFlareOffset} ${(bodyH * 0.45)}
-        L ${-(halfW + actualFlareOffset)} ${(bodyH * 0.45)}
-        Q ${-(halfW - actualWaistIndent)} 0 ${-halfW} ${-(bodyH * 0.45) + armholeDepth}
-        Q ${-(shoulderW + halfW) * 0.48} ${-(bodyH * 0.45) + armholeDepth * 0.6} ${-shoulderW} ${-(bodyH * 0.45) + shoulderDrop}
-        Z
-    `;
+
+
+
+
+
+
+  
+const frontBodicePath = isSeparatedOnePiece ? `
+    M 0 ${-(bodiceH * 0.5) + neckCurvature + 8}
+    Q ${neckHalfW * 0.5} ${-(bodiceH * 0.5) + neckCurvature + 8}
+      ${neckHalfW} ${-(bodiceH * 0.5)}
+    L ${shoulderW} ${-(bodiceH * 0.5) + shoulderDrop}
+    Q ${(shoulderW + halfW) * 0.48}
+      ${-(bodiceH * 0.5) + armholeDepth * 0.6}
+      ${halfW} ${-(bodiceH * 0.5) + armholeDepth}
+    L ${halfW - actualWaistIndent * 0.4} ${bodiceH * 0.5}
+    L 0 ${bodiceH * 0.5}
+    Z
+` : `
+    M 0 ${-(bodyH * 0.45) + neckCurvature + (isTee ? 4 : 8)}
+    Q ${neckHalfW * 0.5}
+      ${-(bodyH * 0.45) + neckCurvature + (isTee ? 4 : 8)}
+      ${neckHalfW} ${-(bodyH * 0.45)}
+    L ${shoulderW} ${-(bodyH * 0.45) + shoulderDrop}
+    Q ${(shoulderW + halfW) * 0.48}
+      ${-(bodyH * 0.45) + armholeDepth * 0.6}
+      ${halfW} ${-(bodyH * 0.45) + armholeDepth}
+    Q ${halfW - actualWaistIndent} 0
+      ${halfW + actualFlareOffset} ${bodyH * 0.45}
+    L 0 ${bodyH * 0.45}
+    Z
+`;
+
+
+
+
+
+
 
     const backOverlap = 6;
     const backBodicePath = isSeparatedOnePiece ? `
@@ -781,17 +798,29 @@ const GrainlineMark = ({
 
 
 {/* 前身頃：中心線 */}
-<g className="pattern-centerline">
+
+{/* 前身頃：わ裁ちの表示 */}
+<g className="pattern-fold-mark">
     <line
         x1={0}
-        y1={frontTopY + neckCurvature + 12}
+        y1={frontTopY + neckCurvature + 8}
         x2={0}
-        y2={frontBottomY - 5}
-        stroke="#888"
-        strokeWidth="0.7"
-        strokeDasharray="3 3"
+        y2={frontBottomY}
+        stroke="#666"
+        strokeWidth="0.8"
     />
+
+    <text
+        x={-6}
+        y={(frontTopY + frontBottomY) / 2}
+        textAnchor="middle"
+        fontSize={subFontSize}
+        fill="#555"
+    >
+        わ
+    </text>
 </g>
+
 
 
 
@@ -824,10 +853,10 @@ const GrainlineMark = ({
 
 
 
-                                <text x={0} y={frontTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
+                                <text x={halfW * 0.5} y={frontTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
                                     {isSeparatedOnePiece ? "上半身前身頃 (わ)" : isTee ? "Tシャツ前身頃 (わ)" : "前身頃 (わ)"}
                                 </text>
-                                <text x={0} y={frontTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">
+                                <text x={halfW * 0.5} y={frontTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">
                                     1枚裁断 {isWoven ? "(布帛)" : ""}
                                 </text>
 
@@ -835,45 +864,46 @@ const GrainlineMark = ({
 
 
 {/* 寸法表示：前身頃 着丈 */}
+
+{/* 寸法表示：前身頃 半身幅 */}
 <g className="pattern-dimension">
     <line
-        x1={-(halfW + actualFlareOffset) - dimensionOffset}
-        y1={frontTopY}
-        x2={-(halfW + actualFlareOffset) - dimensionOffset}
-        y2={bodyH * 0.45}
+        x1={0}
+        y1={frontWidthDimensionY}
+        x2={halfW}
+        y2={frontWidthDimensionY}
         stroke="#666"
         strokeWidth="0.6"
     />
 
-    <line
-        x1={-(halfW + actualFlareOffset) - dimensionOffset - 2}
-        y1={frontTopY}
-        x2={-(halfW + actualFlareOffset) - dimensionOffset + 2}
-        y2={frontTopY}
-        stroke="#666"
-        strokeWidth="0.6"
-    />
-
-    <line
-        x1={-(halfW + actualFlareOffset) - dimensionOffset - 2}
-        y1={bodyH * 0.45}
-        x2={-(halfW + actualFlareOffset) - dimensionOffset + 2}
-        y2={bodyH * 0.45}
-        stroke="#666"
-        strokeWidth="0.6"
-    />
+    {[0, halfW].map((x) => (
+        <line
+            key={x}
+            x1={x}
+            y1={frontWidthDimensionY - 2}
+            x2={x}
+            y2={frontWidthDimensionY + 2}
+            stroke="#666"
+            strokeWidth="0.6"
+        />
+    ))}
 
     <text
-        x={-(halfW + actualFlareOffset) - dimensionOffset - 3}
-        y={0}
+        x={halfW / 2}
+        y={frontWidthDimensionY + dimensionFontSize + 4}
         textAnchor="middle"
         fontSize={dimensionFontSize}
         fill="#555"
-        transform={`rotate(-90 ${-(halfW + actualFlareOffset) - dimensionOffset - 3} 0)`}
     >
-        着丈 {length.toFixed(1)}cm
+        半身幅 {(halfW / scale).toFixed(1)}cm
     </text>
 </g>
+
+
+
+
+
+
 {/* 寸法表示：前身頃 身幅 */}
 <g className="pattern-dimension">
     <line
