@@ -199,11 +199,16 @@ const frontBodicePath = isSeparatedOnePiece ? `
 
 
 
-
+// 前身頃の「わ」の辺には縫い代線を表示しない
+const frontSeamPath = frontBodicePath.replace(
+    /\s*Z\s*$/i,
+    ""
+);
 
 
 
     const backOverlap = 6;
+    
     const backBodicePath = isSeparatedOnePiece ? `
         M 0 ${-(bodiceH * 0.5)}
         L ${neckHalfW} ${-(bodiceH * 0.5) + 3}
