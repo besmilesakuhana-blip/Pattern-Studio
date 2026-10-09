@@ -515,6 +515,78 @@ const backCutLinePath = (() => {
         Z
     `;
 
+
+
+
+
+
+
+
+    // 上下切替ワンピース：スカートの裁断線
+    const separatedSkirtCutPath = (() => {
+        if (frontCutOffset <= 0) return "";
+
+        const topY = -skirtPartH * 0.45;
+        const bottomY = skirtPartH * 0.45;
+
+        const points = [
+            { x: -skirtWaistW / 2, y: topY },
+            { x: skirtWaistW / 2, y: topY },
+            { x: skirtHemW / 2, y: bottomY },
+            { x: -skirtHemW / 2, y: bottomY },
+        ];
+
+        const edges = points.map((p, i) => {
+            const q = points[(i + 1) % points.length];
+            const dx = q.x - p.x;
+            const dy = q.y - p.y;
+            const length = Math.hypot(dx, dy) || 1;
+
+            return {
+                x: p.x + (dy / length) * frontCutOffset,
+                y: p.y - (dx / length) * frontCutOffset,
+                dx,
+                dy,
+            };
+        });
+
+        const corners = edges.map((current, i) => {
+            const previous =
+                edges[(i - 1 + edges.length) % edges.length];
+
+            const cross =
+                previous.dx * current.dy -
+                previous.dy * current.dx;
+
+            if (Math.abs(cross) < 0.000001) {
+                return { x: current.x, y: current.y };
+            }
+
+            const rx = current.x - previous.x;
+            const ry = current.y - previous.y;
+            const t =
+                (rx * current.dy - ry * current.dx) / cross;
+
+            return {
+                x: previous.x + t * previous.dx,
+                y: previous.y + t * previous.dy,
+            };
+        });
+
+        return corners
+            .map((p, i) =>
+                `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+            )
+            .join(" ") + " Z";
+    })();
+
+
+
+
+
+
+
+
     const sleeveBodyH = Math.max(flatSleeveH - sleeveCapH, 10);
     const sleevePath = `
         M ${-flatSleeveW / 2} ${-sleeveBodyH / 2}
@@ -1442,17 +1514,19 @@ const GrainlineMark = ({
                             {isSeparatedOnePiece ? (
                                 <>
                                     <g id="piece-skirt-sep" transform={`translate(${patternLeftX}, ${bottomPartsY + skirtPartH * 0.45})`}>
-                                        {seamStrokeWidth > 0 && (
-                                            <path
-                                                d={separatedSkirtPath}
-                                                fill="none"
-                                                stroke="#c59c52"
-                                                strokeWidth={seamStrokeWidth}
-                                                strokeDasharray="4 2"
-                                                strokeLinejoin="round"
-                                                strokeLinecap="round"
-                                            />
-                                        )}
+                                       
+{frontCutOffset > 0 && (
+    <path
+        d={separatedSkirtCutPath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+
                                         <path
                                             d={separatedSkirtPath}
                                             fill="#faf8f5"
