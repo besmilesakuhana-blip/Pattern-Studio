@@ -335,11 +335,27 @@ const frontCutLinePath = (() => {
     const first = offsetPoints[0];
     const last = offsetPoints[offsetPoints.length - 1];
 
+
+
+
+
     const pathPoints = [
-        { x: 0, y: first.y },
-        ...offsetPoints,
-        { x: 0, y: last.y }
-    ];
+    // 「わ」の襟ぐり側から開始
+    { x: 0, y: cutNeckY - frontCutOffset },
+
+    // 襟ぐりでは「わ」の左側に飛び出さないようにする
+    ...offsetPoints.map((p, i) => ({
+        x: i <= 20 ? Math.max(0, p.x) : p.x,
+        y: p.y
+    })),
+
+    // 裾の裁断線を「わ」まで延ばす
+    { x: 0, y: last.y }
+];
+
+
+
+
 
     return pathPoints
         .map((p, i) =>
@@ -583,7 +599,7 @@ const frontBottomY = isSeparatedOnePiece
     : bodyH * 0.45;
 
 const frontWidthDimensionY =
-    frontBottomY + dimensionOffset;
+    frontBottomY + dimensionOffset + frontCutOffset + 3;
 
 
 
