@@ -390,6 +390,121 @@ const frontCutLinePath = (() => {
         Z
     `;
 
+
+
+
+
+
+
+{/* 後身頃：縫製線の外側に細い裁断線を作成 */}
+const backCutLinePath = (() => {
+    if (frontCutOffset <= 0) return "";
+
+    type Point = { x: number; y: number };
+    const points: Point[] = [];
+
+    const addPoint = (x: number, y: number) => {
+        points.push({ x, y });
+    };
+
+    const addCurve = (
+        start: Point,
+        control: Point,
+        end: Point
+    ) => {
+        for (let i = 1; i <= 20; i++) {
+            const t = i / 20;
+            const s = 1 - t;
+
+            addPoint(
+                s * s * start.x +
+                2 * s * t * control.x +
+                t * t * end.x,
+                s * s * start.y +
+                2 * s * t * control.y +
+                t * t * end.y
+            );
+        }
+    };
+
+    const top = isSeparatedOnePiece
+        ? -bodiceH * 0.5
+        : -bodyH * 0.45;
+
+    const bottom = isSeparatedOnePiece
+        ? bodiceH * 0.5
+        : bodyH * 0.45;
+
+    // 襟ぐり・肩
+    addPoint(0, top);
+    addPoint(neckHalfW, top + 3);
+    addPoint(shoulderW, top + shoulderDrop);
+
+    // 袖ぐり
+    addCurve(
+        { x: shoulderW, y: top + shoulderDrop },
+        {
+            x: (shoulderW + halfW) * 0.48,
+            y: top + armholeDepth * 0.6
+        },
+        { x: halfW, y: top + armholeDepth }
+    );
+
+    // 脇線
+    if (isSeparatedOnePiece) {
+        addPoint(
+            halfW - actualWaistIndent * 0.4,
+            bottom
+        );
+    } else {
+        addCurve(
+            { x: halfW, y: top + armholeDepth },
+            { x: halfW - actualWaistIndent, y: 0 },
+            { x: halfW + actualFlareOffset, y: bottom }
+        );
+    }
+
+    // 裾と背中心
+    addPoint(-backOverlap, bottom);
+    addPoint(-backOverlap, top);
+
+    // 閉じた輪郭の外側に点をずらす
+    const offsetPoints = points.map((point, i) => {
+        const prev = points[
+            (i - 1 + points.length) % points.length
+        ];
+        const next = points[
+            (i + 1) % points.length
+        ];
+
+        const dx = next.x - prev.x;
+        const dy = next.y - prev.y;
+        const len = Math.hypot(dx, dy) || 1;
+
+        return {
+            x: point.x + (dy / len) * frontCutOffset,
+            y: point.y - (dx / len) * frontCutOffset
+        };
+    });
+
+    return offsetPoints
+        .map(
+            (p, i) =>
+                `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+        )
+        .join(" ") + " Z";
+})();
+
+
+
+
+
+
+
+
+
+
+
     const skirtWaistW = (halfW - actualWaistIndent * 0.4) * 2 * 1.4;
     const skirtHemW = skirtWaistW + flareOffset * 2.2;
     const separatedSkirtPath = `
@@ -1091,17 +1206,19 @@ const GrainlineMark = ({
                             </g>
 
                             <g id="piece-back" transform={`translate(${patternRightX}, ${bodiceTopY})`}>
-                                {seamStrokeWidth > 0 && (
-                                    <path
-                                        d={backBodicePath}
-                                        fill="none"
-                                        stroke="#c59c52"
-                                        strokeWidth={seamStrokeWidth}
-                                        strokeDasharray="4 2"
-                                        strokeLinejoin="round"
-                                        strokeLinecap="round"
-                                    />
-                                )}
+                               
+{frontCutOffset > 0 && (
+    <path
+        d={backCutLinePath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+
 
 
 
