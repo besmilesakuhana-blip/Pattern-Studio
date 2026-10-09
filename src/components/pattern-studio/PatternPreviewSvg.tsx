@@ -339,17 +339,17 @@ const frontCutLinePath = (() => {
 
 
 
-    const pathPoints = [
-    // 「わ」の襟ぐり側から開始
-    { x: 0, y: cutNeckY - frontCutOffset },
+   const pathPoints = [
+    // 襟ぐりの裁断線を「わ」の位置から開始
+    { x: 0, y: offsetPoints[0].y },
 
-    // 襟ぐりでは「わ」の左側に飛び出さないようにする
-    ...offsetPoints.map((p, i) => ({
-        x: i <= 20 ? Math.max(0, p.x) : p.x,
+    // 襟ぐりから脇、裾までの裁断線
+    ...offsetPoints.slice(1).map((p) => ({
+        x: Math.max(0, p.x),
         y: p.y
     })),
 
-    // 裾の裁断線を「わ」まで延ばす
+    // 裾の裁断線を「わ」の位置まで延ばす
     { x: 0, y: last.y }
 ];
 
