@@ -525,6 +525,121 @@ const backCutLinePath = (() => {
         Z
     `;
 
+
+
+
+
+    // ======================================
+    // 袖：縫製線の外側に裁断線を作成
+    // ======================================
+    const sleeveCutLinePath = (() => {
+        if (frontCutOffset <= 0) return "";
+
+        type Point = { x: number; y: number };
+        const points: Point[] = [];
+
+        const addPoint = (x: number, y: number) => {
+            points.push({ x, y });
+        };
+
+        const addCubic = (
+            start: Point,
+            c1: Point,
+            c2: Point,
+            end: Point
+        ) => {
+            for (let i = 1; i <= 30; i++) {
+                const t = i / 30;
+                const s = 1 - t;
+
+                addPoint(
+                    s ** 3 * start.x +
+                    3 * s ** 2 * t * c1.x +
+                    3 * s * t ** 2 * c2.x +
+                    t ** 3 * end.x,
+                    s ** 3 * start.y +
+                    3 * s ** 2 * t * c1.y +
+                    3 * s * t ** 2 * c2.y +
+                    t ** 3 * end.y
+                );
+            }
+        };
+
+        const leftTop = {
+            x: -flatSleeveW / 2,
+            y: -sleeveBodyH / 2
+        };
+        const capTop = {
+            x: 0,
+            y: -sleeveBodyH / 2 - sleeveCapH
+        };
+        const rightTop = {
+            x: flatSleeveW / 2,
+            y: -sleeveBodyH / 2
+        };
+
+        addPoint(leftTop.x, leftTop.y);
+
+        addCubic(
+            leftTop,
+            {
+                x: -flatSleeveW * 0.35,
+                y: -sleeveBodyH / 2 - sleeveCapH * 0.3
+            },
+            {
+                x: -flatSleeveW * 0.2,
+                y: capTop.y
+            },
+            capTop
+        );
+
+        addCubic(
+            capTop,
+            {
+                x: flatSleeveW * 0.2,
+                y: capTop.y
+            },
+            {
+                x: flatSleeveW * 0.35,
+                y: -sleeveBodyH / 2 - sleeveCapH * 0.3
+            },
+            rightTop
+        );
+
+        addPoint(sleeveCuffW / 2, sleeveBodyH / 2);
+        addPoint(-sleeveCuffW / 2, sleeveBodyH / 2);
+
+        const offsetPoints = points.map((point, i) => {
+            const prev = points[
+                (i - 1 + points.length) % points.length
+            ];
+            const next = points[
+                (i + 1) % points.length
+            ];
+
+            const dx = next.x - prev.x;
+            const dy = next.y - prev.y;
+            const len = Math.hypot(dx, dy) || 1;
+
+            return {
+                x: point.x + (dy / len) * frontCutOffset,
+                y: point.y - (dx / len) * frontCutOffset
+            };
+        });
+
+        return offsetPoints
+            .map((p, i) =>
+                `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+            )
+            .join(" ") + " Z";
+    })();
+
+
+
+
+
+
+
     const skHalfWaist = (bodyW * 0.5) * 1.05;
     const skH = Math.max(bodyH * 0.75, 35);
     const skFlareAdd = (hemFlare * 4.0);
@@ -1353,17 +1468,19 @@ const GrainlineMark = ({
 
                                     {hasSleeve && (
                                         <g id="piece-sleeve" transform={`translate(${patternRightX}, ${sleeveY})`}>
-                                            {seamStrokeWidth > 0 && (
-                                                <path
-                                                    d={sleevePath}
-                                                    fill="none"
-                                                    stroke="#c59c52"
-                                                    strokeWidth={seamStrokeWidth}
-                                                    strokeDasharray="4 2"
-                                                    strokeLinejoin="round"
-                                                    strokeLinecap="round"
-                                                />
-                                            )}
+                                         
+{frontCutOffset > 0 && (
+    <path
+        d={sleeveCutLinePath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+
                                             <path
                                                 d={sleevePath}
                                                 fill="#faf8f5"
@@ -1487,17 +1604,19 @@ const GrainlineMark = ({
                             ) : (
                                 hasSleeve && (
                                     <g id="piece-sleeve" transform={`translate(${patternCenterX}, ${normalSleeveY})`}>
-                                        {seamStrokeWidth > 0 && (
-                                            <path
-                                                d={sleevePath}
-                                                fill="none"
-                                                stroke="#c59c52"
-                                                strokeWidth={seamStrokeWidth}
-                                                strokeDasharray="4 2"
-                                                strokeLinejoin="round"
-                                                strokeLinecap="round"
-                                            />
-                                        )}
+                                       
+{frontCutOffset > 0 && (
+    <path
+        d={sleeveCutLinePath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+
                                         <path
                                             d={sleevePath}
                                             fill="#faf8f5"
