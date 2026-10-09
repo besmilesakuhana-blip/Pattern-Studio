@@ -207,6 +207,151 @@ const frontSeamPath = frontBodicePath.replace(
 
 
 
+
+// ======================================
+// 前身頃：裁断線を黒い縫製線の外側に作る
+// ======================================
+
+// 縫い代の指定値（SVG上の距離）
+// ※実寸との一致は印刷テストで確認する
+const frontCutOffset =
+    seamAllowance === "10mm" ? 10 :
+    seamAllowance === "7mm" ? 7 :
+    seamAllowance === "5mm" ? 5 : 0;
+
+type CutPoint = { x: number; y: number };
+
+const frontCutPoints: CutPoint[] = [];
+
+const addFrontPoint = (x: number, y: number) => {
+    frontCutPoints.push({ x, y });
+};
+
+// 二次ベジェ曲線を細かい点に分ける
+const addFrontCurve = (
+    start: CutPoint,
+    control: CutPoint,
+    end: CutPoint
+) => {
+    const steps = 20;
+
+    for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const s = 1 - t;
+
+        addFrontPoint(
+            s * s * start.x +
+            2 * s * t * control.x +
+            t * t * end.x,
+            s * s * start.y +
+            2 * s * t * control.y +
+            t * t * end.y
+        );
+    }
+};
+
+// 前身頃の上端・下端
+const cutTop = isSeparatedOnePiece
+    ? -(bodiceH * 0.5)
+    : -(bodyH * 0.45);
+
+const cutBottom = isSeparatedOnePiece
+    ? bodiceH * 0.5
+    : bodyH * 0.45;
+
+const cutNeckY =
+    cutTop + neckCurvature +
+    (isSeparatedOnePiece ? 8 : isTee ? 4 : 8);
+
+// 1. 襟ぐりの始点（わ側）
+addFrontPoint(0, cutNeckY);
+
+// 2. 襟ぐりの曲線
+addFrontCurve(
+    { x: 0, y: cutNeckY },
+    { x: neckHalfW * 0.5, y: cutNeckY },
+    { x: neckHalfW, y: cutTop }
+);
+
+// 3. 肩
+addFrontPoint(shoulderW, cutTop + shoulderDrop);
+
+// 4. 袖ぐり
+addFrontCurve(
+    { x: shoulderW, y: cutTop + shoulderDrop },
+    {
+        x: (shoulderW + halfW) * 0.48,
+        y: cutTop + armholeDepth * 0.6
+    },
+    { x: halfW, y: cutTop + armholeDepth }
+);
+
+// 5. 脇線
+if (isSeparatedOnePiece) {
+    addFrontPoint(
+        halfW - actualWaistIndent * 0.4,
+        cutBottom
+    );
+} else {
+    addFrontCurve(
+        { x: halfW, y: cutTop + armholeDepth },
+        { x: halfW - actualWaistIndent, y: 0 },
+        {
+            x: halfW + actualFlareOffset,
+            y: cutBottom
+        }
+    );
+}
+
+// 6. 裾（わ側まで）
+addFrontPoint(0, cutBottom);
+
+// 7. 輪郭の外側に裁断線を作成
+const frontCutLinePath = (() => {
+    if (frontCutOffset === 0) return "";
+
+    const points = frontCutPoints;
+
+    const offsetPoints = points.map((point, i) => {
+        const prev = points[Math.max(0, i - 1)];
+        const next = points[Math.min(points.length - 1, i + 1)];
+
+        const dx = next.x - prev.x;
+        const dy = next.y - prev.y;
+        const length = Math.hypot(dx, dy) || 1;
+
+        // 輪郭の外側へ向かう法線
+        const nx = dy / length;
+        const ny = -dx / length;
+
+        return {
+            x: point.x + nx * frontCutOffset,
+            y: point.y + ny * frontCutOffset
+        };
+    });
+
+    // 「わ」の辺には裁断線を引かず、
+    // 襟ぐり側と裾側を中心線まで延ばす
+    const first = offsetPoints[0];
+    const last = offsetPoints[offsetPoints.length - 1];
+
+    const pathPoints = [
+        { x: 0, y: first.y },
+        ...offsetPoints,
+        { x: 0, y: last.y }
+    ];
+
+    return pathPoints
+        .map((p, i) =>
+            `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+        )
+        .join(" ");
+})();
+
+
+
+
+
     const backOverlap = 6;
     
     const backBodicePath = isSeparatedOnePiece ? `
@@ -777,19 +922,22 @@ const GrainlineMark = ({
                           
                           
                             <g id="piece-front" transform={`translate(${patternLeftX}, ${bodiceTopY})`}>
-                                {seamStrokeWidth > 0 && (
-                                 <path
-    d={frontSeamPath}
-    fill="none"
-    stroke="#c59c52"
-    strokeWidth="0.8"
-    strokeDasharray="3 2"
-    strokeLinejoin="round"
-    strokeLinecap="round"
-/>
+                               {frontCutOffset > 0 && (
+    <path
+        d={frontCutLinePath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
 
 
-                                )}
+
+
+
                                 <path
                                     d={frontBodicePath}
                                     fill="#faf8f5"
