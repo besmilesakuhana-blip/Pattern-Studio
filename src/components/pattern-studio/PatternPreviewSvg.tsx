@@ -715,59 +715,100 @@ const backCutLinePath = (() => {
     // スカート・ボトムス共通：縫製線の外側に裁断線を作る
     type OutlinePoint = { x: number; y: number };
 
-    const makeOuterCutPath = (
-        points: OutlinePoint[],
-        offset: number
-    ): string => {
-        if (offset <= 0 || points.length < 3) return "";
+    
 
-        const area = points.reduce((sum, p, i) => {
-            const q = points[(i + 1) % points.length];
-            return sum + p.x * q.y - q.x * p.y;
-        }, 0);
 
-        const direction = area >= 0 ? 1 : -1;
 
-        const shifted = points.map((p, i) => {
-            const prev = points[(i - 1 + points.length) % points.length];
-            const next = points[(i + 1) % points.length];
+    
+const makeOuterCutPath = (
+    points: OutlinePoint[],
+    offset: number
+): string => {
+    if (offset <= 0 || points.length < 3) return "";
 
-            const edgeNormal = (a: OutlinePoint, b: OutlinePoint) => {
-                const dx = b.x - a.x;
-                const dy = b.y - a.y;
-                const len = Math.hypot(dx, dy) || 1;
+    // 始点と終点の重複を除去する
+    const cleanPoints = points.filter((p, i) => {
+        if (i === 0) return true;
+        const prev = points[i - 1];
+        return Math.hypot(p.x - prev.x, p.y - prev.y) > 0.001;
+    });
 
-                return {
-                    x: direction * dy / len,
-                    y: -direction * dx / len
-                };
-            };
+    if (cleanPoints.length > 2) {
+        const first = cleanPoints[0];
+        const last = cleanPoints[cleanPoints.length - 1];
 
-            const n1 = edgeNormal(prev, p);
-            const n2 = edgeNormal(p, next);
+        if (Math.hypot(first.x - last.x, first.y - last.y) < 0.001) {
+            cleanPoints.pop();
+        }
+    }
 
-            const nx = n1.x + n2.x;
-            const ny = n1.y + n2.y;
-            const len = Math.hypot(nx, ny) || 1;
-            const ux = nx / len;
-            const uy = ny / len;
+    const count = cleanPoints.length;
+    if (count < 3) return "";
 
-            const dot = ux * n2.x + uy * n2.y;
-            const distance = Math.min(
-                offset * 3,
-                offset / Math.max(dot, 0.33)
-            );
+    const area = cleanPoints.reduce((sum, p, i) => {
+        const q = cleanPoints[(i + 1) % count];
+        return sum + p.x * q.y - q.x * p.y;
+    }, 0);
 
+    const direction = area >= 0 ? 1 : -1;
+
+    const normals = cleanPoints.map((p, i) => {
+        const q = cleanPoints[(i + 1) % count];
+        const dx = q.x - p.x;
+        const dy = q.y - p.y;
+        const length = Math.hypot(dx, dy) || 1;
+
+        return {
+            x: direction * dy / length,
+            y: -direction * dx / length
+        };
+    });
+
+    const shifted = cleanPoints.map((p, i) => {
+        const previous = normals[(i - 1 + count) % count];
+        const current = normals[i];
+
+        const nx = previous.x + current.x;
+        const ny = previous.y + current.y;
+        const length = Math.hypot(nx, ny);
+
+        // 鋭角で点線が大きく飛び出さないようにする
+        if (length < 0.001) {
             return {
-                x: p.x + ux * distance,
-                y: p.y + uy * distance
+                x: p.x + current.x * offset,
+                y: p.y + current.y * offset
             };
-        });
+        }
 
-        return shifted
-            .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-            .join(" ") + " Z";
-    };
+        const ux = nx / length;
+        const uy = ny / length;
+        const dot = ux * current.x + uy * current.y;
+
+        // 角の飛び出しを最大1.5倍に制限
+        const distance = Math.min(
+            offset * 1.5,
+            offset / Math.max(dot, 0.01)
+        );
+
+        return {
+            x: p.x + ux * distance,
+            y: p.y + uy * distance
+        };
+    });
+
+    return shifted
+        .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+        .join(" ") + " Z";
+};
+
+
+
+
+
+
+
+
+
 
     // 二次ベジェ曲線を点列に変換
     const sampleQuadratic = (
@@ -2021,12 +2062,32 @@ const GrainlineMark = ({
                                 strokeWidth="1.5"
                                 strokeLinejoin="round"
                             />
-                            <text x={0} y={isSmallDoll ? (skTopY - 11) : -4} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
-                                スカートパターン
-                            </text>
-                            <text x={0} y={isSmallDoll ? (skTopY - 3) : (titleFontSize + 3)} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">
-                                前・後 2枚裁断 (わ裁ち)
-                            </text>
+                     
+                     
+                     
+                     
+                          <text
+    x={0}
+    y={skTopY - frontCutOffset - labelLineGap - 8}
+    textAnchor="middle"
+    fontSize={titleFontSize}
+    className="pattern-label-title"
+>
+    スカートパターン
+</text>
+<text
+    x={0}
+    y={skTopY - frontCutOffset - 8}
+    textAnchor="middle"
+    fontSize={subFontSize}
+    className="pattern-label-sub"
+>
+    前・後 2枚裁断 (わ裁ち)
+</text>
+
+
+
+
                         </g>
                     )}
 
@@ -2057,7 +2118,7 @@ const GrainlineMark = ({
                               
                               <text
     x={0}
-    y={pY_top - labelGap - labelLineGap}
+    y={pY_top - frontCutOffset - labelLineGap - 8}
     textAnchor="middle"
     fontSize={titleFontSize}
     className="pattern-label-title"
@@ -2067,7 +2128,7 @@ const GrainlineMark = ({
 
 <text
     x={0}
-    y={pY_top - labelGap}
+   y={pY_top - frontCutOffset - 8}
     textAnchor="middle"
     fontSize={subFontSize}
     className="pattern-label-sub"
@@ -2080,17 +2141,17 @@ const GrainlineMark = ({
                             </g>
 
                             <g transform={`translate(${pantGap}, 0)`}>
-                                {seamStrokeWidth > 0 && (
-                                    <path
-                                        d={backPantPath}
-                                        fill="none"
-                                        stroke="#c59c52"
-                                        strokeWidth={seamStrokeWidth}
-                                        strokeDasharray="4 2"
-                                        strokeLinejoin="round"
-                                        strokeLinecap="round"
-                                    />
-                                )}
+                                {frontCutOffset > 0 && (
+    <path
+        d={backPantCutPath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
                                 <path
                                     d={backPantPath}
                                     fill="#faf8f5"
