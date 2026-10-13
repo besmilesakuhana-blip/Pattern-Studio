@@ -867,11 +867,24 @@ const backCutLinePath = (() => {
     const skirtSepTopY = -(skirtPartH * 0.45);
     const sleeveTopY = -(sleeveBodyH / 2 + sleeveCapH);
 
-    const backPartWidth = halfW + actualFlareOffset;
-    const isBackNarrow = backPartWidth < 65 || isSmallDoll;
-    const backTextY1 = isBackNarrow ? (backTopY - 11) : -4;
-    const backTextY2 = isBackNarrow ? (backTopY - 3) : (titleFontSize + 3);
-    const backTextX = isBackNarrow ? (halfW * 0.25) : (halfW * 0.35);
+
+
+
+    // 後身頃：縫い代の外側にタイトルを配置
+const backPartWidth = halfW + actualFlareOffset;
+const isBackNarrow = backPartWidth < 65 || isSmallDoll;
+
+const backTextY2 =
+    backTopY - frontCutOffset - 5;
+
+const backTextY1 =
+    backTextY2 - labelLineGap;
+
+const backTextX =
+    isBackNarrow ? halfW * 0.25 : halfW * 0.35;
+
+
+
 
 
 
@@ -882,8 +895,12 @@ const frontTextY2 = frontTextY1 + labelLineGap;
 
 
 
-    const sleeveTextY1 = isSmallDoll ? (sleeveTopY - 11) : -2;
-    const sleeveTextY2 = isSmallDoll ? (sleeveTopY - 3) : (titleFontSize + 3);
+  // 袖：縫い代の上にタイトルと裁断情報を配置
+const sleeveTextY2 =
+    sleeveTopY - frontCutOffset - 5;
+
+const sleeveTextY1 =
+    sleeveTextY2 - labelLineGap;
 
 
 
@@ -1653,11 +1670,17 @@ const GrainlineMark = ({
 {/* 寸法表示：袖丈 */}
 <text
     x={0}
-   y={
-    isSeparatedOnePiece
-        ? bodiceH * 0.5 + dimensionOffset
-        : bodyH * 0.45 + dimensionOffset - 2
-}
+
+
+
+    
+  y={sleeveBodyH / 2 + frontCutOffset + dimensionOffset + dimensionFontSize}
+
+
+
+
+
+
     textAnchor="middle"
     fontSize={dimensionFontSize}
     fill="#555"
@@ -1793,7 +1816,15 @@ const GrainlineMark = ({
 {/* 寸法表示：袖丈 */}
 <text
     x={0}
-    y={sleeveBodyH / 2 + dimensionOffset}
+
+
+
+    y={sleeveBodyH / 2 + frontCutOffset + dimensionOffset + dimensionFontSize}
+
+
+
+
+    
     textAnchor="middle"
     fontSize={dimensionFontSize}
     fill="#555"
