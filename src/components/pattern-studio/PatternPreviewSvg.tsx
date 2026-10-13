@@ -712,6 +712,84 @@ const backCutLinePath = (() => {
 
 
 
+    // スカート・ボトムス共通：縫製線の外側に裁断線を作る
+    type OutlinePoint = { x: number; y: number };
+
+    const makeOuterCutPath = (
+        points: OutlinePoint[],
+        offset: number
+    ): string => {
+        if (offset <= 0 || points.length < 3) return "";
+
+        const area = points.reduce((sum, p, i) => {
+            const q = points[(i + 1) % points.length];
+            return sum + p.x * q.y - q.x * p.y;
+        }, 0);
+
+        const direction = area >= 0 ? 1 : -1;
+
+        const shifted = points.map((p, i) => {
+            const prev = points[(i - 1 + points.length) % points.length];
+            const next = points[(i + 1) % points.length];
+
+            const edgeNormal = (a: OutlinePoint, b: OutlinePoint) => {
+                const dx = b.x - a.x;
+                const dy = b.y - a.y;
+                const len = Math.hypot(dx, dy) || 1;
+
+                return {
+                    x: direction * dy / len,
+                    y: -direction * dx / len
+                };
+            };
+
+            const n1 = edgeNormal(prev, p);
+            const n2 = edgeNormal(p, next);
+
+            const nx = n1.x + n2.x;
+            const ny = n1.y + n2.y;
+            const len = Math.hypot(nx, ny) || 1;
+            const ux = nx / len;
+            const uy = ny / len;
+
+            const dot = ux * n2.x + uy * n2.y;
+            const distance = Math.min(
+                offset * 3,
+                offset / Math.max(dot, 0.33)
+            );
+
+            return {
+                x: p.x + ux * distance,
+                y: p.y + uy * distance
+            };
+        });
+
+        return shifted
+            .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+            .join(" ") + " Z";
+    };
+
+    // 二次ベジェ曲線を点列に変換
+    const sampleQuadratic = (
+        start: OutlinePoint,
+        control: OutlinePoint,
+        end: OutlinePoint,
+        steps = 24
+    ): OutlinePoint[] =>
+        Array.from({ length: steps }, (_, i) => {
+            const t = (i + 1) / steps;
+            const s = 1 - t;
+
+            return {
+                x: s * s * start.x + 2 * s * t * control.x + t * t * end.x,
+                y: s * s * start.y + 2 * s * t * control.y + t * t * end.y
+            };
+        });
+
+
+
+
+
     const skHalfWaist = (bodyW * 0.5) * 1.05;
     const skH = Math.max(bodyH * 0.75, 35);
     const skFlareAdd = (hemFlare * 4.0);
@@ -720,6 +798,7 @@ const backCutLinePath = (() => {
     const skHemCurveDepth = 5 + (hemFlare * 1.5);
     const skTopY = -skH * 0.5;
     const skBottomY = skH * 0.5;
+    
     const skirtPath = `
         M ${-skHalfWaist} ${skTopY}
         Q 0 ${skTopY + skWaistCurveDepth} ${skHalfWaist} ${skTopY}
@@ -727,6 +806,31 @@ const backCutLinePath = (() => {
         Q 0 ${skBottomY + skHemCurveDepth} ${-skHalfHem} ${skBottomY}
         Z
     `;
+
+
+
+
+    const skirtCutPath = makeOuterCutPath(
+        [
+            { x: -skHalfWaist, y: skTopY },
+            ...sampleQuadratic(
+                { x: -skHalfWaist, y: skTopY },
+                { x: 0, y: skTopY + skWaistCurveDepth },
+                { x: skHalfWaist, y: skTopY }
+            ),
+            { x: skHalfHem, y: skBottomY },
+            ...sampleQuadratic(
+                { x: skHalfHem, y: skBottomY },
+                { x: 0, y: skBottomY + skHemCurveDepth },
+                { x: -skHalfHem, y: skBottomY }
+            )
+        ],
+        frontCutOffset
+    );
+
+
+
+
 
     const pY_top = -bodyH / 2;
     const pY_hip = -bodyH / 2 + crotchLength;
@@ -759,6 +863,57 @@ const backCutLinePath = (() => {
         Q ${-bHipX - 3} ${(pY_top + pY_hip)/2} ${-bWaistX} ${pY_top} 
         Z
     `;
+
+
+
+
+    const frontPantCutPath = makeOuterCutPath(
+        [
+            { x: -fWaistX + 3, y: pY_top + 3 },
+            { x: fWaistX, y: pY_top },
+            ...sampleQuadratic(
+                { x: fWaistX, y: pY_top },
+                { x: fHipX + 3, y: (pY_top + pY_hip) / 2 },
+                { x: fHipX, y: pY_hip }
+            ),
+            { x: fHemX, y: pY_hem },
+            { x: -fHemX, y: pY_hem },
+            { x: fCrotchX, y: pY_hip },
+            ...sampleQuadratic(
+                { x: fCrotchX, y: pY_hip },
+                { x: -fWaistX + 2, y: (pY_top + pY_hip) / 2 },
+                { x: -fWaistX + 3, y: pY_top + 3 }
+            )
+        ],
+        frontCutOffset
+    );
+
+    const backPantCutPath = makeOuterCutPath(
+        [
+            { x: -bWaistX, y: pY_top },
+            { x: bWaistX, y: pY_top - 6 },
+            ...sampleQuadratic(
+                { x: bWaistX, y: pY_top - 6 },
+                { x: bWaistX - 2, y: (pY_top + pY_hip) / 2 + 5 },
+                { x: bCrotchX, y: pY_hip }
+            ),
+            { x: bHemX, y: pY_hem },
+            { x: -bHemX, y: pY_hem },
+            { x: -bHipX, y: pY_hip },
+            ...sampleQuadratic(
+                { x: -bHipX, y: pY_hip },
+                { x: -bHipX - 3, y: (pY_top + pY_hip) / 2 },
+                { x: -bWaistX, y: pY_top }
+            )
+        ],
+        frontCutOffset
+    );
+
+
+
+
+
+
 
     const overlayBodiceW = bodyW;
     const overlayWaistW = bodyW - waistIndent * 0.8;
@@ -1824,7 +1979,7 @@ const GrainlineMark = ({
 
 
 
-    
+
     textAnchor="middle"
     fontSize={dimensionFontSize}
     fill="#555"
@@ -1848,17 +2003,17 @@ const GrainlineMark = ({
 
                     {category === "スカート" && (
                         <g id="piece-skirt" transform={`translate(${patternCenterX}, ${skCenterY})`}>
-                            {seamStrokeWidth > 0 && (
-                                <path
-                                    d={skirtPath}
-                                    fill="none"
-                                    stroke="#c59c52"
-                                    strokeWidth={seamStrokeWidth}
-                                    strokeDasharray="4 2"
-                                    strokeLinejoin="round"
-                                    strokeLinecap="round"
-                                />
-                            )}
+                         {frontCutOffset > 0 && (
+    <path
+        d={skirtCutPath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
                             <path
                                 d={skirtPath}
                                 fill="#faf8f5"
@@ -1878,17 +2033,17 @@ const GrainlineMark = ({
                     {category === "ボトムス" && (
                         <g id="piece-pants" transform={`translate(${patternCenterX}, ${pCenterY})`}>
                             <g transform={`translate(${-pantGap}, 0)`}>
-                                {seamStrokeWidth > 0 && (
-                                    <path
-                                        d={frontPantPath}
-                                        fill="none"
-                                        stroke="#c59c52"
-                                        strokeWidth={seamStrokeWidth}
-                                        strokeDasharray="4 2"
-                                        strokeLinejoin="round"
-                                        strokeLinecap="round"
-                                    />
-                                )}
+                              {frontCutOffset > 0 && (
+    <path
+        d={frontPantCutPath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
                                 <path
                                     d={frontPantPath}
                                     fill="#faf8f5"
