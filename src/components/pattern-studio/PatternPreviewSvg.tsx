@@ -1232,6 +1232,159 @@ console.log("型紙の脇線チェック", {
 
 
 
+```tsx
+// =====================================
+// 袖ぐり・袖山の長さチェック
+// ※型紙の形状は変更しない
+// =====================================
+
+// 三次ベジェ曲線の長さを計算
+const measureCubicLength = (
+    start: { x: number; y: number },
+    control1: { x: number; y: number },
+    control2: { x: number; y: number },
+    end: { x: number; y: number }
+) => {
+    let total = 0;
+    let previous = start;
+
+    for (let i = 1; i <= 100; i++) {
+        const t = i / 100;
+        const s = 1 - t;
+
+        const point = {
+            x:
+                s ** 3 * start.x +
+                3 * s ** 2 * t * control1.x +
+                3 * s * t ** 2 * control2.x +
+                t ** 3 * end.x,
+            y:
+                s ** 3 * start.y +
+                3 * s ** 2 * t * control1.y +
+                3 * s * t ** 2 * control2.y +
+                t ** 3 * end.y,
+        };
+
+        total += Math.hypot(
+            point.x - previous.x,
+            point.y - previous.y
+        );
+
+        previous = point;
+    }
+
+    return total;
+};
+
+// 身頃の袖ぐり：前後で同じ曲線を使用
+const armholeStart = {
+    x: shoulderW,
+    y: frontTopY + shoulderDrop,
+};
+
+const armholeControl = {
+    x: (shoulderW + halfW) * 0.48,
+    y: frontTopY + armholeDepth * 0.6,
+};
+
+const armholeEnd = {
+    x: halfW,
+    y: frontTopY + armholeDepth,
+};
+
+const frontArmholeLength = measureCurveLength(
+    armholeStart,
+    armholeControl,
+    armholeEnd
+);
+
+const backArmholeLength = measureCurveLength(
+    armholeStart,
+    armholeControl,
+    armholeEnd
+);
+
+// 袖山の左端・頂点・右端
+const sleeveLeft = {
+    x: -flatSleeveW / 2,
+    y: -sleeveBodyH / 2,
+};
+
+const sleeveTop = {
+    x: 0,
+    y: -sleeveBodyH / 2 - sleeveCapH,
+};
+
+const sleeveRight = {
+    x: flatSleeveW / 2,
+    y: -sleeveBodyH / 2,
+};
+
+// 袖山の左半分
+const sleeveFrontLength = measureCubicLength(
+    sleeveLeft,
+    {
+        x: -flatSleeveW * 0.35,
+        y: -sleeveBodyH / 2 - sleeveCapH * 0.3,
+    },
+    {
+        x: -flatSleeveW * 0.2,
+        y: sleeveTop.y,
+    },
+    sleeveTop
+);
+
+// 袖山の右半分
+const sleeveBackLength = measureCubicLength(
+    sleeveTop,
+    {
+        x: flatSleeveW * 0.2,
+        y: sleeveTop.y,
+    },
+    {
+        x: flatSleeveW * 0.35,
+        y: -sleeveBodyH / 2 - sleeveCapH * 0.3,
+    },
+    sleeveRight
+);
+
+// SVG上の長さをcmに換算
+const frontArmholeCm = frontArmholeLength / scale;
+const backArmholeCm = backArmholeLength / scale;
+
+const sleeveFrontCm = sleeveFrontLength / scale;
+const sleeveBackCm = sleeveBackLength / scale;
+
+const totalArmholeCm =
+    frontArmholeCm + backArmholeCm;
+
+const totalSleeveCm =
+    sleeveFrontCm + sleeveBackCm;
+
+const sleeveDifferenceCm =
+    totalSleeveCm - totalArmholeCm;
+
+// 袖付きのトップスだけ確認
+if (isAnyTop && hasSleeve && !isOverlayMode) {
+    console.log("型紙の袖ぐりチェック", {
+        category,
+        size,
+        frontArmholeCm: frontArmholeCm.toFixed(2),
+        backArmholeCm: backArmholeCm.toFixed(2),
+        totalArmholeCm: totalArmholeCm.toFixed(2),
+        sleeveFrontCm: sleeveFrontCm.toFixed(2),
+        sleeveBackCm: sleeveBackCm.toFixed(2),
+        totalSleeveCm: totalSleeveCm.toFixed(2),
+        differenceCm: sleeveDifferenceCm.toFixed(2),
+    });
+}
+```
+
+
+
+
+
+
 
 // ================================
 // 袖の合印
