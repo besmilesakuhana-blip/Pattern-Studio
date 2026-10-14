@@ -1044,7 +1044,14 @@ const makeOuterCutPath = (
     const bWaistX = bodyW * 0.22;
     const bHipX = bodyW * 0.28;
     const bHemX = pantHemW * 0.52;
-    const bCrotchX = thighW * 0.5 + 14;
+
+
+
+   const bCrotchX = bHemX + Math.abs(fCrotchX + fHemX);
+
+
+
+
     const backPantPath = `
         M ${-bWaistX} ${pY_top} 
         L ${bWaistX} ${pY_top - 6} 
@@ -1182,7 +1189,7 @@ const makeOuterCutPath = (
 
 
 
-    
+
 
     const backPantCutPath = makeOuterCutPath(
         [
