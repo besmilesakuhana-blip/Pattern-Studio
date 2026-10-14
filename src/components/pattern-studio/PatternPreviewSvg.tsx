@@ -1232,7 +1232,7 @@ console.log("型紙の脇線チェック", {
 
 
 
-```tsx
+
 // =====================================
 // 袖ぐり・袖山の長さチェック
 // ※型紙の形状は変更しない
@@ -1378,7 +1378,7 @@ if (isAnyTop && hasSleeve && !isOverlayMode) {
         differenceCm: sleeveDifferenceCm.toFixed(2),
     });
 }
-```
+
 
 
 
