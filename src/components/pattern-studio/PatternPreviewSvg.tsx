@@ -1369,6 +1369,21 @@ if (isAnyTop && hasSleeve && !isOverlayMode) {
     console.log("型紙の袖ぐりチェック", {
         category,
         size,
+
+
+
+
+ // 袖ぐり・袖山の寸法差の原因調査
+    armholeDepthCm: (armholeDepth / scale).toFixed(2),
+    flatSleeveWidthCm: (flatSleeveW / scale).toFixed(2),
+    sleeveCapHeightCm: (sleeveCapH / scale).toFixed(2),
+    bodiceHeightCm: (bodiceH / scale).toFixed(2),
+
+
+
+
+
+
         frontArmholeCm: frontArmholeCm.toFixed(2),
         backArmholeCm: backArmholeCm.toFixed(2),
         totalArmholeCm: totalArmholeCm.toFixed(2),
