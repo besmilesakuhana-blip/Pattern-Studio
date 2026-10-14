@@ -100,9 +100,133 @@ export function PatternPreviewSvg({
     const actualWaistIndent = isTee ? 0 : waistIndent;
     const actualFlareOffset = isTee ? 0 : flareOffset;
 
-    const baseSleeveReferenceW = Math.min(width * scale * 0.6 * easeRatio, 120 * (isOverlayMode ? overlayZoom : 1)); 
-    const flatSleeveW = Math.max((armholeDepth * 1.4 + Math.abs(halfW - shoulderW) * 0.8), baseSleeveReferenceW);
-    const flatSleeveH = sleeve * scale;
+    const baseSleeveReferenceW = Math.min(
+    width * scale * 0.6 * easeRatio,
+    120 * (isOverlayMode ? overlayZoom : 1)
+);
+
+// 通常の袖幅：既存の計算を維持
+const normalFlatSleeveW = Math.max(
+    armholeDepth * 1.4 + Math.abs(halfW - shoulderW) * 0.8,
+    baseSleeveReferenceW
+);
+
+// 上下切替ワンピースだけ、袖ぐりの曲線長に合わせる
+const flatSleeveW = isSeparatedOnePiece && hasSleeve && !isOverlayMode
+    ? (() => {
+        const top = -bodiceH * 0.5;
+
+        const start = {
+            x: shoulderW,
+            y: top + shoulderDrop
+        };
+
+        const control = {
+            x: (shoulderW + halfW) * 0.48,
+            y: top + armholeDepth * 0.6
+        };
+
+        const end = {
+            x: halfW,
+            y: top + armholeDepth
+        };
+
+        // 身頃の袖ぐり曲線を測定
+        let armholeLength = 0;
+        let previous = start;
+
+        for (let i = 1; i <= 100; i++) {
+            const t = i / 100;
+            const s = 1 - t;
+
+            const point = {
+                x: s * s * start.x
+                    + 2 * s * t * control.x
+                    + t * t * end.x,
+                y: s * s * start.y
+                    + 2 * s * t * control.y
+                    + t * t * end.y
+            };
+
+            armholeLength += Math.hypot(
+                point.x - previous.x,
+                point.y - previous.y
+            );
+
+            previous = point;
+        }
+
+        // 前後の袖ぐり合計
+        const targetLength = armholeLength * 2;
+
+        // 下にある袖山の高さの計算と同じ条件
+        const capHeight = Math.max(
+            armholeDepth * 0.40 + puffHeight,
+            10
+        );
+
+        // 指定した袖幅で袖山の曲線長を計算
+        const measureSleeveCap = (sleeveWidth: number) => {
+            let total = 0;
+
+            for (const side of [-1, 1]) {
+                let previousPoint = {
+                    x: side * sleeveWidth / 2,
+                    y: 0
+                };
+
+                for (let i = 1; i <= 100; i++) {
+                    const t = i / 100;
+                    const s = 1 - t;
+
+                    const point = {
+                        x:
+                            s ** 3 * side * sleeveWidth / 2
+                            + 3 * s ** 2 * t * side * sleeveWidth * 0.35
+                            + 3 * s * t ** 2 * side * sleeveWidth * 0.2,
+                        y:
+                            3 * s ** 2 * t * (-capHeight * 0.3)
+                            + 3 * s * t ** 2 * (-capHeight)
+                            + t ** 3 * (-capHeight)
+                    };
+
+                    total += Math.hypot(
+                        point.x - previousPoint.x,
+                        point.y - previousPoint.y
+                    );
+
+                    previousPoint = point;
+                }
+            }
+
+            return total;
+        };
+
+        // 二分探索で袖ぐりに合う袖幅を求める
+        let low = 0;
+        let high = normalFlatSleeveW;
+
+        for (let i = 0; i < 40; i++) {
+            const middle = (low + high) / 2;
+
+            if (measureSleeveCap(middle) > targetLength) {
+                high = middle;
+            } else {
+                low = middle;
+            }
+        }
+
+        return (low + high) / 2;
+    })()
+    : normalFlatSleeveW;
+
+const flatSleeveH = sleeve * scale;
+
+
+
+
+
+
     const sleeveCapH = Math.max(armholeDepth * 0.40 + puffHeight, 10 * (isOverlayMode ? overlayZoom : 1));
     const sleeveCuffW = flatSleeveW * Math.min(cuffWidthRatio, 1.8);
 
