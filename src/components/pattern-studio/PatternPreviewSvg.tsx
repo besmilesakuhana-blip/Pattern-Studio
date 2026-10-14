@@ -240,7 +240,7 @@ const flatSleeveW = useAdjustedSleeve
 
 
 
-
+const flatSleeveH = sleeve * scale;
 
     
     const sleeveCuffW = flatSleeveW * Math.min(cuffWidthRatio, 1.8);
