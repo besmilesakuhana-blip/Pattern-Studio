@@ -117,7 +117,11 @@ const normalFlatSleeveW = Math.max(
 
 // 上下切替ワンピースだけ、袖幅と袖山の高さを同時調整
 const useAdjustedSleeve =
-    isSeparatedOnePiece && hasSleeve && !isOverlayMode;
+    isAnyTop && hasSleeve && !isOverlayMode;
+
+
+
+
 
 // 身頃の袖ぐりの実際の曲線長を測る
 const targetSleeveCapLength = (() => {
@@ -202,7 +206,15 @@ const measureAdjustedSleeveCap = (
 const flatSleeveW = useAdjustedSleeve
     ? (() => {
         let low = 0;
-        let high = normalFlatSleeveW;
+
+
+
+        let high = isSeparatedOnePiece
+    ? normalFlatSleeveW
+    : Math.max(normalFlatSleeveW * 2, targetSleeveCapLength * 2);
+
+
+
 
         for (let i = 0; i < 40; i++) {
             const middle = (low + high) / 2;
