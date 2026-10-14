@@ -1080,6 +1080,110 @@ const makeOuterCutPath = (
         frontCutOffset
     );
 
+
+
+
+
+
+
+
+    // =====================================
+    // ボトムス：前後パンツの縫い合わせ寸法チェック
+    // ※型紙の形状は変更しない
+    // =====================================
+    if (category === "ボトムス" && !isOverlayMode) {
+        type PantPoint = { x: number; y: number };
+
+        // 直線の長さ
+        const lineLength = (a: PantPoint, b: PantPoint) =>
+            Math.hypot(b.x - a.x, b.y - a.y);
+
+        // 二次ベジェ曲線の長さ
+        const curveLength = (
+            start: PantPoint,
+            control: PantPoint,
+            end: PantPoint
+        ) => {
+            let total = 0;
+            let previous = start;
+
+            for (let i = 1; i <= 100; i++) {
+                const t = i / 100;
+                const s = 1 - t;
+                const point = {
+                    x: s * s * start.x + 2 * s * t * control.x + t * t * end.x,
+                    y: s * s * start.y + 2 * s * t * control.y + t * t * end.y,
+                };
+                total += lineLength(previous, point);
+                previous = point;
+            }
+            return total;
+        };
+
+        // 外側の縫い合わせ線（脇線）
+        const frontOuter =
+            curveLength(
+                { x: fWaistX, y: pY_top },
+                { x: fHipX + 3, y: (pY_top + pY_hip) / 2 },
+                { x: fHipX, y: pY_hip }
+            ) +
+            lineLength(
+                { x: fHipX, y: pY_hip },
+                { x: fHemX, y: pY_hem }
+            );
+
+        const backOuter =
+            curveLength(
+                { x: -bWaistX, y: pY_top },
+                { x: -bHipX - 3, y: (pY_top + pY_hip) / 2 },
+                { x: -bHipX, y: pY_hip }
+            ) +
+            lineLength(
+                { x: -bHipX, y: pY_hip },
+                { x: -bHemX, y: pY_hem }
+            );
+
+        // 内側の縫い合わせ線（股下線）
+        const frontInner = lineLength(
+            { x: fCrotchX, y: pY_hip },
+            { x: -fHemX, y: pY_hem }
+        );
+
+        const backInner = lineLength(
+            { x: bCrotchX, y: pY_hip },
+            { x: bHemX, y: pY_hem }
+        );
+
+        // cm換算（現在のSVG計算スケール）
+        const toCm = (value: number) => value / scale;
+        const fmt = (value: number) => toCm(value).toFixed(2);
+
+        console.log("型紙のボトムス縫い合わせチェック", {
+            category,
+            size,
+            frontOuterCm: fmt(frontOuter),
+            backOuterCm: fmt(backOuter),
+            outerDifferenceCm: fmt(Math.abs(frontOuter - backOuter)),
+            frontInnerCm: fmt(frontInner),
+            backInnerCm: fmt(backInner),
+            innerDifferenceCm: fmt(Math.abs(frontInner - backInner)),
+        });
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
     const backPantCutPath = makeOuterCutPath(
         [
             { x: -bWaistX, y: pY_top },
