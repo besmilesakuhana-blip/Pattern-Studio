@@ -1153,6 +1153,84 @@ const backNotchY =
 
 
 
+// =====================================
+// 前身頃・後身頃の脇線長さチェック
+// ※型紙の形状は変更しない
+// =====================================
+
+// 二次ベジェ曲線の長さを計算
+const measureCurveLength = (
+    start: { x: number; y: number },
+    control: { x: number; y: number },
+    end: { x: number; y: number }
+) => {
+    let total = 0;
+    let previous = start;
+
+    for (let i = 1; i <= 100; i++) {
+        const t = i / 100;
+        const s = 1 - t;
+
+        const point = {
+            x: s * s * start.x + 2 * s * t * control.x + t * t * end.x,
+            y: s * s * start.y + 2 * s * t * control.y + t * t * end.y,
+        };
+
+        total += Math.hypot(
+            point.x - previous.x,
+            point.y - previous.y
+        );
+
+        previous = point;
+    }
+
+    return total;
+};
+
+// 脇線の始点（袖ぐりの下）
+const sideStart = {
+    x: halfW,
+    y: frontTopY + armholeDepth,
+};
+
+// 前身頃・後身頃の脇線長さ
+const sideSeamLength = isSeparatedOnePiece
+    ? Math.hypot(
+        halfW - actualWaistIndent * 0.4 - sideStart.x,
+        frontBottomY - sideStart.y
+    )
+    : measureCurveLength(
+        sideStart,
+        { x: halfW - actualWaistIndent, y: 0 },
+        { x: halfW + actualFlareOffset, y: frontBottomY }
+    );
+
+// 現在の型紙では前後の脇線に同じ計算式を使用
+const frontSideSeamLength = sideSeamLength;
+const backSideSeamLength = sideSeamLength;
+
+// SVGの基本スケールに基づく参考寸法（cm）
+const frontSideSeamCm = frontSideSeamLength / scale;
+const backSideSeamCm = backSideSeamLength / scale;
+
+// 前後の差（cm）
+const sideSeamDifferenceCm = Math.abs(
+    frontSideSeamCm - backSideSeamCm
+);
+
+// 開発時の確認用
+console.log("型紙の脇線チェック", {
+    category,
+    size,
+    frontSideSeamCm: frontSideSeamCm.toFixed(2),
+    backSideSeamCm: backSideSeamCm.toFixed(2),
+    differenceCm: sideSeamDifferenceCm.toFixed(2),
+});
+
+
+
+
+
 
 
 // ================================
