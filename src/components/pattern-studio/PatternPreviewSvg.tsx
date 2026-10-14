@@ -227,12 +227,17 @@ const flatSleeveW = useAdjustedSleeve
 
 
 
-   const sleeveCapH = useAdjustedSleeve
+    const sleeveCapH = useAdjustedSleeve
     ? adjustedSleeveCapH
     : Math.max(
         armholeDepth * 0.40 + puffHeight,
         10 * (isOverlayMode ? overlayZoom : 1)
     );
+
+
+
+
+
 
 
 
