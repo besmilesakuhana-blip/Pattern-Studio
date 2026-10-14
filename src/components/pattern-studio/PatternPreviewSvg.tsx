@@ -2560,9 +2560,9 @@ const GrainlineMark = ({
                               
                               
                               
-                              <text
+                           <text
     x={0}
-    y={pY_top - labelGap - labelLineGap}
+    y={pY_top - frontCutOffset - labelLineGap - 8}
     textAnchor="middle"
     fontSize={titleFontSize}
     className="pattern-label-title"
@@ -2572,14 +2572,13 @@ const GrainlineMark = ({
 
 <text
     x={0}
-    y={pY_top - labelGap}
+    y={pY_top - frontCutOffset - 8}
     textAnchor="middle"
     fontSize={subFontSize}
     className="pattern-label-sub"
 >
     左右2枚裁断
 </text>
-
 
 
 
