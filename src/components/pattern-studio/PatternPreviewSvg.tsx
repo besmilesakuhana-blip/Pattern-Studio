@@ -1042,8 +1042,12 @@ const makeOuterCutPath = (
         Z
     `;
     const bWaistX = bodyW * 0.22;
-    const bHipX = bodyW * 0.28;
-    const bHemX = pantHemW * 0.52;
+
+
+ const bHipX = fHipX;
+
+
+   const bHemX = fHemX;
 
 
 
