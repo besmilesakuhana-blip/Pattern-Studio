@@ -1800,7 +1800,38 @@ const GrainlineMark = ({
         className="pattern-grid-rect"
     />
 )}
-          
+
+
+
+
+{/* 印刷サイズ確認用：30mm × 30mm */}
+{!isOverlayMode && (
+    <g id="print-scale-check">
+        <rect
+            x={15}
+            y={15}
+            width={30}
+            height={30}
+            fill="white"
+            stroke="#111"
+            strokeWidth={0.8}
+        />
+        <text
+            x={30}
+            y={53}
+            textAnchor="middle"
+            fontSize={5}
+            fill="#111"
+        >
+            30mm × 30mm
+        </text>
+    </g>
+)}
+
+
+
+
+
             {isOverlayMode ? (
                 <g id="finished-clothing-silhouette">
                     {isAnyTop && (
