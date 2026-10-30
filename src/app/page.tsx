@@ -49,6 +49,10 @@ function PatternStudioContent() {
     const [size, setSize] = useState("10cmぬい");
     const [bust, setBust] = useState("DD(M胸)");
     const [category, setCategory] = useState("ワンピース");
+
+const [skirtGatherMode, setSkirtGatherMode] = useState<"gather" | "plain">("gather");
+
+    const [gatherType, setGatherType] = useState("ギャザーあり");
     const [seamAllowance, setSeamAllowance] = useState("5mm");
     const [fabricType, setFabricType] = useState("ニット・伸縮生地");
     const [paperOption, setPaperOption] = useState("パーツ個別出力（推奨・自動分割対応）");
@@ -1788,6 +1792,41 @@ const padYBottom = 12;
                                             unit=" 段階"
                                             onChange={setHemFlare}
                                         />
+
+
+{category === "ワンピース(上下切替)" && (
+  <div className="space-y-2 pt-3">
+    <p className="text-sm font-medium text-[#D8B15A]">
+      スカート上端の仕上げ方
+    </p>
+    <div className="flex gap-2">
+      <button
+        type="button"
+        onClick={() => setSkirtGatherMode("gather")}
+        className={`rounded px-4 py-2 text-sm ${
+          skirtGatherMode === "gather"
+            ? "bg-[#D8B15A] text-black"
+            : "bg-[#252525] text-white"
+        }`}
+      >
+        ギャザーあり
+      </button>
+      <button
+        type="button"
+        onClick={() => setSkirtGatherMode("plain")}
+        className={`rounded px-4 py-2 text-sm ${
+          skirtGatherMode === "plain"
+            ? "bg-[#D8B15A] text-black"
+            : "bg-[#252525] text-white"
+        }`}
+      >
+        ギャザーなし
+      </button>
+    </div>
+  </div>
+)}
+
+
                                         {category !== "スカート" && hasSleeve && (
                                             <>
                                                 <SliderField

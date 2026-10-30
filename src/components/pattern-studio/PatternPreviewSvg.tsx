@@ -20,6 +20,9 @@ export type PatternPreviewSvgProps = {
     thighWidthRatio: number;
     pantHemRatio: number;
     category: string;
+
+skirtGatherMode?: "gather" | "plain";
+
     size: string;
     seamAllowance: string;
     fabricType?: string;
@@ -49,6 +52,9 @@ export function PatternPreviewSvg({
     pantHemRatio,
     category,
     size,
+
+  skirtGatherMode = "gather",
+
     seamAllowance,
     fabricType = "ニット・伸縮生地",
     isOverlayMode,
@@ -655,7 +661,9 @@ const backCutLinePath = (() => {
 // 上下切替ワンピース：上身頃の裾とスカート上端の寸法確認
 if (isSeparatedOnePiece && !isOverlayMode) {
     const bodiceHemWidth = (halfW - actualWaistIndent * 0.4) * 2;
-    const skirtTopWidth = bodiceHemWidth * 1.4;
+    const skirtTopWidth =
+    bodiceHemWidth *
+    (skirtGatherMode === "gather" ? 1.4 : 1.0);
 
     console.log("上下切替ワンピースの接合寸法チェック", {
         size,
@@ -667,7 +675,10 @@ if (isSeparatedOnePiece && !isOverlayMode) {
 
 
 
-    const skirtWaistW = (halfW - actualWaistIndent * 0.4) * 2 * 1.4;
+  const skirtWaistW =
+    (halfW - actualWaistIndent * 0.4) *
+    2 *
+    (skirtGatherMode === "gather" ? 1.4 : 1.0);
     const skirtHemW = skirtWaistW + flareOffset * 2.2;
     const separatedSkirtPath = `
         M ${-skirtWaistW / 2} ${-(skirtPartH * 0.45)}
