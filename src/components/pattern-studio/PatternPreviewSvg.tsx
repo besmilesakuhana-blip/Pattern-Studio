@@ -652,7 +652,18 @@ const backCutLinePath = (() => {
 
 
 
+// 上下切替ワンピース：上身頃の裾とスカート上端の寸法確認
+if (isSeparatedOnePiece && !isOverlayMode) {
+    const bodiceHemWidth = (halfW - actualWaistIndent * 0.4) * 2;
+    const skirtTopWidth = bodiceHemWidth * 1.4;
 
+    console.log("上下切替ワンピースの接合寸法チェック", {
+        size,
+        bodiceHemCm: (bodiceHemWidth / scale).toFixed(2),
+        skirtTopCm: (skirtTopWidth / scale).toFixed(2),
+        differenceCm: ((skirtTopWidth - bodiceHemWidth) / scale).toFixed(2),
+    });
+}
 
 
 
