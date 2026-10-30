@@ -1542,6 +1542,9 @@ const padYBottom = 12;
                                                 pantHemRatio={pantHemRatio}
                                                 category={category}
                                                 size={size}
+
+                                                skirtGatherMode={skirtGatherMode}
+                                                
                                                 seamAllowance={seamAllowance}
                                                 fabricType={fabricType}
                                                 isOverlayMode={viewMode === "overlay"}
