@@ -659,19 +659,35 @@ const backCutLinePath = (() => {
 
 
 // 上下切替ワンピース：上身頃の裾とスカート上端の寸法確認
+
+// 上下切替ワンピース：前後身頃とスカートの接合寸法チェック
 if (isSeparatedOnePiece && !isOverlayMode) {
-    const bodiceHemWidth = (halfW - actualWaistIndent * 0.4) * 2;
-    const skirtTopWidth =
-    bodiceHemWidth *
+  // 前身頃は「わ裁断」なので、型紙の幅を2倍する
+  const frontHemWidth =
+    (halfW - actualWaistIndent * 0.4) * 2;
+
+  // 後身頃は左右2枚。背中開きの重なりを除いた接合幅
+  const backHemWidth =
+    (halfW - actualWaistIndent * 0.4) * 2;
+
+  // スカート上端は前後各1枚、同じ幅
+  const skirtTopWidth =
+    frontHemWidth *
     (skirtGatherMode === "gather" ? 1.4 : 1.0);
 
-    console.log("上下切替ワンピースの接合寸法チェック", {
-        size,
-        bodiceHemCm: (bodiceHemWidth / scale).toFixed(2),
-        skirtTopCm: (skirtTopWidth / scale).toFixed(2),
-        differenceCm: ((skirtTopWidth - bodiceHemWidth) / scale).toFixed(2),
-    });
+  console.log("上下切替ワンピースの接合寸法チェック", {
+    size,
+    gatherMode: skirtGatherMode,
+    frontHemCm: (frontHemWidth / scale).toFixed(2),
+    backHemCm: (backHemWidth / scale).toFixed(2),
+    skirtTopCm: (skirtTopWidth / scale).toFixed(2),
+    frontDifferenceCm:
+      ((skirtTopWidth - frontHemWidth) / scale).toFixed(2),
+    backDifferenceCm:
+      ((skirtTopWidth - backHemWidth) / scale).toFixed(2),
+  });
 }
+
 
 
 
@@ -796,7 +812,7 @@ if (isSeparatedOnePiece && !isOverlayMode) {
             for (let i = 1; i <= 30; i++) {
                 const t = i / 30;
                 const s = 1 - t;
-
+　
                 addPoint(
                     s ** 3 * start.x +
                     3 * s ** 2 * t * c1.x +
