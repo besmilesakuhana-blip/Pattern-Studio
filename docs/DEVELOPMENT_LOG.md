@@ -66466,3 +66466,2949 @@ const GrainlineMark = ({
         </svg>
     );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ここまでの作業を一度整理しましょう！
+
+今回は Pattern Studioの開発記録として、修正したコード・実装内容・動作確認結果・今後の課題 をまとめるのがよいと思います。
+
+特に大切なのは、後日作業を再開したときに「どのファイルの、どこを、何のために変更したのか」が分かることです。
+
+## 今回までに完成・確認できた機能
+
+| 項目          | 内容                         | 状況         |
+| ----------- | -------------------------- | ---------- |
+| 袖ぐりと袖山      | Tシャツ・ワンピース・上下切替ワンピースの寸法を照合 | 画面上の計算値で一致 |
+| スカート上端の仕上げ方 | ギャザーあり／なしを選択可能             | 実装済み       |
+| ギャザーなし      | 上身頃の裾幅とスカート上端幅を一致させる       | 3サイズ確認済み   |
+| ギャザーあり      | スカート上端幅を上身頃の約1.4倍にする       | 3サイズ確認済み   |
+| 微調整画面       | 上下切替ワンピースのときだけ選択項目を表示      | 実装済み       |
+| Console検証   | 接合寸法と寸法差を確認できる             | 動作確認済み     |
+| ビルド         | `npm run build`            | 成功を確認      |
+
+### 最終確認した寸法
+
+| サイズ    | 上身頃裾幅  | ギャザーなし | ギャザーあり  |
+| ------ | ------ | ------ | ------- |
+| 10cmぬい | 3.76cm | 3.76cm | 5.26cm  |
+| 15cmぬい | 5.76cm | 5.76cm | 8.06cm  |
+| 20cmぬい | 7.76cm | 7.76cm | 10.86cm |
+
+いずれもConsoleの表示値です。実物の縫製検証はまだ行っていません。
+
+## 開発記録とコードをまとめました
+
+開発記録＋確認用コード（ZIP）
+
+開発記録とPatternPreviewSvg.tsxの確認用スナップショットを収録
+
+開発記録だけを見る（Markdown）
+
+変更箇所・コード抜粋・検証数値・次回の作業手順
+
+なお、ZIP内のコードは保存されている確認用ファイルです。現在のGitHubの最新コード一式をバックアップしたものではありません。 `page.tsx` の追加箇所については、スクリーンショットを基にした参考コードとして記録しています。
+
+この記録を残しておけば、次回はどこまで確認できたかを振り返りながら作業を再開できます。
+
+次は実寸印刷と型紙の縫い合わせ検証に進むのがよいと思います。
+
+
+
+
+
+
+# Pattern Studio 開発記録（2026年10月30日）
+
+## 目的と範囲
+上下切替ワンピースのスカート上端を「ギャザーあり／ギャザーなし」から選択できるようにし、上身頃の裾とスカート上端の接合寸法を確認した。これまでの袖ぐり・袖山の寸法照合も記録する。
+
+**確認範囲:** 会話中のVS Code・ブラウザー画面、Consoleログ、および保存されている `PatternPreviewSvg(20261030-042917).tsx`。GitHub上の最新コミット全体との一致、実寸印刷・試縫いは未検証。
+
+## 実装した機能
+1. 上下切替ワンピースに限り、微調整欄に「スカート上端の仕上げ方」を表示。
+2. 「ギャザーあり」ではスカート上端幅を上身頃裾幅の1.4倍にする。
+3. 「ギャザーなし」では両者を1.0倍（一致）にする。
+4. SVG型紙のスカート上端幅に選択結果を反映。
+5. Consoleに上身頃裾幅、スカート上端幅、差をcmで出力。
+6. Tシャツ・ワンピース・上下切替ワンピースの袖ぐり／袖山寸法照合も実施（画面上の値は一致）。
+
+## 変更箇所とコード
+
+### A. `src/app/page.tsx`（画面側）
+会話中の画面で確認した追加内容。行番号は変更により前後する。
+
+**状態管理（`PatternStudioContent` 冒頭、`useState` 群）**
+```tsx
+const [skirtGatherMode, setSkirtGatherMode] = useState<"gather" | "plain">("gather");
+```
+
+**微調整欄（「裾の広がり（フレア）」の直後）**
+```tsx
+{category === "ワンピース(上下切替)" && (
+  <div className="space-y-2 pt-3">
+    <p className="text-sm font-medium text-[#D8B15A]">
+      スカート上端の仕上げ方
+    </p>
+    <div className="flex gap-2">
+      <button type="button" onClick={() => setSkirtGatherMode("gather")}
+        className={`rounded px-4 py-2 text-sm ${skirtGatherMode === "gather" ? "bg-[#D8B15A] text-black" : "bg-[#252525] text-white"}`}>
+        ギャザーあり
+      </button>
+      <button type="button" onClick={() => setSkirtGatherMode("plain")}
+        className={`rounded px-4 py-2 text-sm ${skirtGatherMode === "plain" ? "bg-[#D8B15A] text-black" : "bg-[#252525] text-white"}`}>
+        ギャザーなし
+      </button>
+    </div>
+  </div>
+)}
+```
+※この画面コードは会話のスクリーンショットを基に再構成した参考抜粋。完全一致の原本ではない。
+
+**SVGコンポーネントへの受け渡し**
+```tsx
+<PatternPreviewSvg
+  // ...既存のpropsはそのまま...
+  skirtGatherMode={skirtGatherMode}
+/>
+```
+※上記は該当propsの説明用抜粋。`// ...` を含むまま既存のコンポーネント全体と置き換えないこと。
+
+### B. `src/components/pattern-studio/PatternPreviewSvg.tsx`（型紙側）
+以下は保存されているTSXから確認したコード。
+
+**Props型**
+```tsx
+skirtGatherMode?: "gather" | "plain";
+```
+
+**関数引数の初期値**
+```tsx
+skirtGatherMode = "gather",
+```
+
+**接合寸法のログ**
+```tsx
+if (isSeparatedOnePiece && !isOverlayMode) {
+    const bodiceHemWidth = (halfW - actualWaistIndent * 0.4) * 2;
+    const skirtTopWidth =
+    bodiceHemWidth *
+    (skirtGatherMode === "gather" ? 1.4 : 1.0);
+
+    console.log("上下切替ワンピースの接合寸法チェック", {
+        size,
+        bodiceHemCm: (bodiceHemWidth / scale).toFixed(2),
+        skirtTopCm: (skirtTopWidth / scale).toFixed(2),
+        differenceCm: ((skirtTopWidth - bodiceHemWidth) / scale).toFixed(2),
+    });
+}
+```
+
+**スカート形状への反映**
+```tsx
+const skirtWaistW =
+  (halfW - actualWaistIndent * 0.4) *
+  2 *
+  (skirtGatherMode === "gather" ? 1.4 : 1.0);
+const skirtHemW = skirtWaistW + flareOffset * 2.2;
+```
+
+## Consoleで確認した数値
+| ぬいサイズ | 上身頃裾幅 | ギャザーなし：スカート上端 | 差 | ギャザーあり：スカート上端 | 差 |
+|---|---:|---:|---:|---:|---:|
+| 10cm | 3.76cm | 3.76cm | 0.00cm | 5.26cm | 1.50cm |
+| 15cm | 5.76cm | 5.76cm | 0.00cm | 8.06cm | 2.30cm |
+| 20cm | 7.76cm | 7.76cm | 0.00cm | 10.86cm | 3.10cm |
+
+20cmの「ギャザーあり」は、再選択・再生成後の最新ログで10.86cm／差3.10cmを確認。過去ログが残るため、Consoleの一番新しい行を見る。
+
+## ビルド・公開
+- `npm run build` の成功画面を確認。
+- `git add` → `git commit` → `git push origin main` の実行・成功画面を確認した段階がある。
+- Vercelの公開画面で選択UIとConsoleの出力を確認。
+- **この記録作成時点で最新の全変更がコミット済みかは未確認**。作業再開時は `git status` で確認する。
+
+## 袖ぐり・袖山についての記録
+Tシャツ・ワンピース・上下切替ワンピースの10/15/20cmで、Consoleの袖ぐり合計と袖山合計が表示精度上一致した。寸法一致は縫いやすさ・着用フィットの保証ではないため、印刷と試縫いが必要。
+
+## 次回の作業手順
+1. VS Codeで `git status` を実行し、未コミットの変更を確認。
+2. 現在の `page.tsx` と `PatternPreviewSvg.tsx` をバックアップ。
+3. 30mmチェック枠を100%印刷し、実測。
+4. 10/15/20cmのギャザーあり・なしを紙で合わせる。縫い代と縫製線を区別して検証。
+5. 袖ぐりと袖山も実物の縫製線上で検証。
+6. 実測結果に応じて、必要な箇所だけ変更する。
+
+## 注意
+本書の「正常」は画面上の計算と表示についての判定。実物の型紙の完成保証ではない。特にギャザーありは1.4倍の余剰を寄せて縫う設計であり、縫い代を含む外周同士の長さを比較しないこと。
+"use client";
+
+import React from "react";
+
+export type PatternPreviewSvgProps = {
+    length: number;
+    width: number;
+    sleeve: number;
+    sleeveAngle: number;
+    shoulderWidthRatio: number;
+    waistCurve: number;
+    hemFlare: number;
+    neckDepth: number;
+    puffVolume: number;
+    cuffWidthRatio: number;
+    neckOffsetY: number;
+    neckOffsetX: number;
+    overlayZoom: number;
+    riseDepth: number;
+    thighWidthRatio: number;
+    pantHemRatio: number;
+    category: string;
+
+skirtGatherMode?: "gather" | "plain";
+
+    size: string;
+    seamAllowance: string;
+    fabricType?: string;
+    isOverlayMode: boolean;
+    hasSleeve: boolean;
+    collarType: string;
+    collarScale: number;
+    svgRef?: React.RefObject<SVGSVGElement | null>;
+};
+
+export function PatternPreviewSvg({
+    length,
+    width,
+    sleeve,
+    sleeveAngle,
+    shoulderWidthRatio,
+    waistCurve,
+    hemFlare,
+    neckDepth,
+    puffVolume,
+    cuffWidthRatio,
+    neckOffsetY,
+    neckOffsetX,
+    overlayZoom,
+    riseDepth,
+    thighWidthRatio,
+    pantHemRatio,
+    category,
+    size,
+
+  skirtGatherMode = "gather",
+
+    seamAllowance,
+    fabricType = "ニット・伸縮生地",
+    isOverlayMode,
+    hasSleeve,
+    collarType,
+    collarScale,
+    svgRef,
+}: PatternPreviewSvgProps) {
+    // 布帛（非伸縮）選択時は、ドールが無理なく着脱できるよう身幅・袖幅に約8%のゆとり係数を適用
+    const isWoven = fabricType === "布帛・非伸縮";
+    const easeRatio = isWoven ? 1.08 : 1.0;
+
+    const scale = isOverlayMode ? (10 * overlayZoom) : 10;
+
+    // 基本身幅・着丈の計算（布帛時は幅にイーズが付加される）
+    const bodyW = width * scale * easeRatio;
+    const bodyH = length * scale;
+
+    const isTee = category === "Tシャツ";
+    const isSeparatedOnePiece = category === "ワンピース(上下切替)";
+    const isAnyTop = isTee || category === "ワンピース" || isSeparatedOnePiece;
+
+    const bodiceH = isSeparatedOnePiece ? bodyH * 0.42 : bodyH;
+    const skirtPartH = isSeparatedOnePiece ? bodyH * 0.58 : bodyH;
+
+    const waistIndent = (waistCurve * 1.5) * (isOverlayMode ? overlayZoom : 1);
+    const flareOffset = (hemFlare * 2.5) * (isOverlayMode ? overlayZoom : 1);
+    const puffHeight = hasSleeve ? (puffVolume * 2.0 * (isOverlayMode ? overlayZoom : 1)) : 0;
+    const neckCurvature = (neckDepth * 2.5) * (isOverlayMode ? overlayZoom : 1);
+
+    const seamStrokeWidth = seamAllowance === "なし" ? 0 : seamAllowance === "10mm" ? 10 : seamAllowance === "7mm" ? 7 : 5;
+
+    const crotchLength = (bodyH * (0.28 + riseDepth * 0.015));
+    const thighW = (bodyW * 0.5) * thighWidthRatio;
+    const pantHemW = (bodyW * 0.4) * pantHemRatio;
+
+    const centerX = 250 + neckOffsetX;
+    const topY = 170 + neckOffsetY;
+
+    const halfW = bodyW / 2;
+    const baseShoulderRatio = isTee ? 0.90 : 0.86;
+    const nsOffset = hasSleeve ? 1.0 : 0.85;
+    const shoulderW = halfW * baseShoulderRatio * shoulderWidthRatio * nsOffset;
+    const shoulderOffset = shoulderW;
+    const neckHalfW = halfW * (isTee ? 0.42 : 0.46);
+    const shoulderDrop = 4 * (isOverlayMode ? overlayZoom : 1);
+    const armholeDepth = Math.min(bodiceH * 0.44, 45 * (isOverlayMode ? overlayZoom : 1));
+
+    const actualWaistIndent = isTee ? 0 : waistIndent;
+    const actualFlareOffset = isTee ? 0 : flareOffset;
+
+    const baseSleeveReferenceW = Math.min(
+    width * scale * 0.6 * easeRatio,
+    120 * (isOverlayMode ? overlayZoom : 1)
+);
+
+// 通常の袖幅：既存の計算を維持
+const normalFlatSleeveW = Math.max(
+    armholeDepth * 1.4 + Math.abs(halfW - shoulderW) * 0.8,
+    baseSleeveReferenceW
+);
+
+
+
+
+
+// 上下切替ワンピースだけ、袖幅と袖山の高さを同時調整
+const useAdjustedSleeve =
+    isAnyTop && hasSleeve && !isOverlayMode;
+
+
+
+
+
+// 身頃の袖ぐりの実際の曲線長を測る
+const targetSleeveCapLength = (() => {
+    if (!useAdjustedSleeve) return 0;
+
+    const top = -bodiceH * 0.5;
+    const start = { x: shoulderW, y: top + shoulderDrop };
+    const control = {
+        x: (shoulderW + halfW) * 0.48,
+        y: top + armholeDepth * 0.6
+    };
+    const end = { x: halfW, y: top + armholeDepth };
+
+    let length = 0;
+    let previous = start;
+
+    for (let i = 1; i <= 100; i++) {
+        const t = i / 100;
+        const s = 1 - t;
+
+        const point = {
+            x: s * s * start.x + 2 * s * t * control.x + t * t * end.x,
+            y: s * s * start.y + 2 * s * t * control.y + t * t * end.y
+        };
+
+        length += Math.hypot(
+            point.x - previous.x,
+            point.y - previous.y
+        );
+        previous = point;
+    }
+
+    return length * 2;
+})();
+
+// 袖山の高さを袖ぐりの寸法に応じて調整
+const adjustedSleeveCapH = useAdjustedSleeve
+    ? Math.min(
+        armholeDepth * 0.4 + puffHeight,
+        targetSleeveCapLength * 0.22
+    )
+    : 0;
+
+// 袖山の曲線長を計算
+const measureAdjustedSleeveCap = (
+    sleeveWidth: number,
+    capHeight: number
+) => {
+    let total = 0;
+
+    for (const side of [-1, 1]) {
+        let previous = { x: side * sleeveWidth / 2, y: 0 };
+
+        for (let i = 1; i <= 100; i++) {
+            const t = i / 100;
+            const s = 1 - t;
+
+            const point = {
+                x:
+                    s ** 3 * side * sleeveWidth / 2 +
+                    3 * s ** 2 * t * side * sleeveWidth * 0.35 +
+                    3 * s * t ** 2 * side * sleeveWidth * 0.2,
+                y:
+                    3 * s ** 2 * t * (-capHeight * 0.3) +
+                    3 * s * t ** 2 * (-capHeight) +
+                    t ** 3 * (-capHeight)
+            };
+
+            total += Math.hypot(
+                point.x - previous.x,
+                point.y - previous.y
+            );
+
+            previous = point;
+        }
+    }
+
+    return total;
+};
+
+// 袖幅を求める
+const flatSleeveW = useAdjustedSleeve
+    ? (() => {
+        let low = 0;
+
+
+
+        let high = isSeparatedOnePiece
+    ? normalFlatSleeveW
+    : Math.max(normalFlatSleeveW * 2, targetSleeveCapLength * 2);
+
+
+
+
+        for (let i = 0; i < 40; i++) {
+            const middle = (low + high) / 2;
+
+            if (
+                measureAdjustedSleeveCap(
+                    middle,
+                    adjustedSleeveCapH
+                ) > targetSleeveCapLength
+            ) {
+                high = middle;
+            } else {
+                low = middle;
+            }
+        }
+
+        return (low + high) / 2;
+    })()
+    : normalFlatSleeveW;
+
+
+
+
+
+    const sleeveCapH = useAdjustedSleeve
+    ? adjustedSleeveCapH
+    : Math.max(
+        armholeDepth * 0.40 + puffHeight,
+        10 * (isOverlayMode ? overlayZoom : 1)
+    );
+
+
+
+
+
+
+
+const flatSleeveH = sleeve * scale;
+
+    
+    const sleeveCuffW = flatSleeveW * Math.min(cuffWidthRatio, 1.8);
+
+    const overlaySleeveW = Math.max(flatSleeveW * 0.45, (width * 0.42) * scale * easeRatio);
+    const overlaySleeveH = sleeve * scale;
+    const overlayCuffW = overlaySleeveW * Math.min(cuffWidthRatio, 1.4);
+
+    const baseCollarH = Math.min(bodyH * 0.15, 18 * (isOverlayMode ? overlayZoom : 1));
+    const cH = baseCollarH * collarScale;
+    
+    const cOuterX = -neckHalfW * (0.5 + 0.5 * collarScale);
+    const cPointX = -neckHalfW * 0.9 * collarScale;
+
+    // サイズ判定
+    const isSmallDoll = size === "10cmぬい" || size === "ねんどろいどどーる";
+    const isMidDoll = size === "15cmぬい" || size === "20cmぬい";
+ const titleFontSize = isSmallDoll ? 4.5 : isMidDoll ? 6.5 : 8.5;
+const subFontSize = isSmallDoll ? 3.4 : isMidDoll ? 5.0 : 6.8;
+
+const dimensionFontSize = isSmallDoll ? 3.2 : isMidDoll ? 4.5 : 6;
+const dimensionOffset = isSmallDoll ? 7 : 10;
+
+
+
+
+// 型紙とタイトル・裁断情報の間隔
+const labelGap = isSmallDoll ? 18 : isMidDoll ? 25 : 30;
+const labelLineGap = isSmallDoll ? 7 : isMidDoll ? 9 : 11;
+
+
+
+
+    const overlayPointedCollarPath = `
+        M 0 ${neckCurvature}
+        L ${cPointX} ${neckCurvature + cH}
+        L ${cOuterX} ${neckCurvature - 2}
+        Q ${-neckHalfW * 0.5} ${neckCurvature + 3} 0 ${neckCurvature}
+    `;
+    const overlayRoundCollarPath = `
+        M 0 ${neckCurvature}
+        C ${cPointX * 0.2} ${neckCurvature + cH + 4 * collarScale} ${cPointX * 1.2} ${neckCurvature + cH} ${cOuterX} ${neckCurvature - 2}
+        Q ${-neckHalfW * 0.5} ${neckCurvature + 3} 0 ${neckCurvature}
+    `;
+
+    const fCollarW = neckHalfW * 1.6;
+    const fOuterW = fCollarW * (0.5 + 0.5 * collarScale);
+
+    const flatPointedCollarPath = `
+        M 0 0
+        Q ${fCollarW * 0.5} 4 ${fCollarW} -2
+        L ${fOuterW * 1.1} ${cH}
+        L 0 ${cH - 3 * collarScale}
+        Z
+    `;
+    const flatRoundCollarPath = `
+        M 0 0
+        Q ${fCollarW * 0.5} 4 ${fCollarW} -2
+        C ${fOuterW * 1.3} 8 ${fOuterW * 0.8} ${cH + 4 * collarScale} 0 ${cH}
+        Z
+    `;
+
+
+
+
+
+
+
+  
+const frontBodicePath = isSeparatedOnePiece ? `
+    M 0 ${-(bodiceH * 0.5) + neckCurvature + 8}
+    Q ${neckHalfW * 0.5} ${-(bodiceH * 0.5) + neckCurvature + 8}
+      ${neckHalfW} ${-(bodiceH * 0.5)}
+    L ${shoulderW} ${-(bodiceH * 0.5) + shoulderDrop}
+    Q ${(shoulderW + halfW) * 0.48}
+      ${-(bodiceH * 0.5) + armholeDepth * 0.6}
+      ${halfW} ${-(bodiceH * 0.5) + armholeDepth}
+    L ${halfW - actualWaistIndent * 0.4} ${bodiceH * 0.5}
+    L 0 ${bodiceH * 0.5}
+    Z
+` : `
+    M 0 ${-(bodyH * 0.45) + neckCurvature + (isTee ? 4 : 8)}
+    Q ${neckHalfW * 0.5}
+      ${-(bodyH * 0.45) + neckCurvature + (isTee ? 4 : 8)}
+      ${neckHalfW} ${-(bodyH * 0.45)}
+    L ${shoulderW} ${-(bodyH * 0.45) + shoulderDrop}
+    Q ${(shoulderW + halfW) * 0.48}
+      ${-(bodyH * 0.45) + armholeDepth * 0.6}
+      ${halfW} ${-(bodyH * 0.45) + armholeDepth}
+    Q ${halfW - actualWaistIndent} 0
+      ${halfW + actualFlareOffset} ${bodyH * 0.45}
+    L 0 ${bodyH * 0.45}
+    Z
+`;
+
+
+
+// 前身頃の「わ」の辺には縫い代線を表示しない
+const frontSeamPath = frontBodicePath.replace(
+    /\s*Z\s*$/i,
+    ""
+);
+
+
+
+
+// ======================================
+// 前身頃：裁断線を黒い縫製線の外側に作る
+// ======================================
+
+// 縫い代の指定値（SVG上の距離）
+// ※実寸との一致は印刷テストで確認する
+const frontCutOffset =
+    seamAllowance === "10mm" ? 10 :
+    seamAllowance === "7mm" ? 7 :
+    seamAllowance === "5mm" ? 5 : 0;
+
+type CutPoint = { x: number; y: number };
+
+const frontCutPoints: CutPoint[] = [];
+
+const addFrontPoint = (x: number, y: number) => {
+    frontCutPoints.push({ x, y });
+};
+
+// 二次ベジェ曲線を細かい点に分ける
+const addFrontCurve = (
+    start: CutPoint,
+    control: CutPoint,
+    end: CutPoint
+) => {
+    const steps = 20;
+
+    for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const s = 1 - t;
+
+        addFrontPoint(
+            s * s * start.x +
+            2 * s * t * control.x +
+            t * t * end.x,
+            s * s * start.y +
+            2 * s * t * control.y +
+            t * t * end.y
+        );
+    }
+};
+
+// 前身頃の上端・下端
+const cutTop = isSeparatedOnePiece
+    ? -(bodiceH * 0.5)
+    : -(bodyH * 0.45);
+
+const cutBottom = isSeparatedOnePiece
+    ? bodiceH * 0.5
+    : bodyH * 0.45;
+
+const cutNeckY =
+    cutTop + neckCurvature +
+    (isSeparatedOnePiece ? 8 : isTee ? 4 : 8);
+
+// 1. 襟ぐりの始点（わ側）
+addFrontPoint(0, cutNeckY);
+
+// 2. 襟ぐりの曲線
+addFrontCurve(
+    { x: 0, y: cutNeckY },
+    { x: neckHalfW * 0.5, y: cutNeckY },
+    { x: neckHalfW, y: cutTop }
+);
+
+// 3. 肩
+addFrontPoint(shoulderW, cutTop + shoulderDrop);
+
+// 4. 袖ぐり
+addFrontCurve(
+    { x: shoulderW, y: cutTop + shoulderDrop },
+    {
+        x: (shoulderW + halfW) * 0.48,
+        y: cutTop + armholeDepth * 0.6
+    },
+    { x: halfW, y: cutTop + armholeDepth }
+);
+
+// 5. 脇線
+if (isSeparatedOnePiece) {
+    addFrontPoint(
+        halfW - actualWaistIndent * 0.4,
+        cutBottom
+    );
+} else {
+    addFrontCurve(
+        { x: halfW, y: cutTop + armholeDepth },
+        { x: halfW - actualWaistIndent, y: 0 },
+        {
+            x: halfW + actualFlareOffset,
+            y: cutBottom
+        }
+    );
+}
+
+// 6. 裾（わ側まで）
+addFrontPoint(0, cutBottom);
+
+// 7. 輪郭の外側に裁断線を作成
+const frontCutLinePath = (() => {
+    if (frontCutOffset === 0) return "";
+
+    const points = frontCutPoints;
+
+    const offsetPoints = points.map((point, i) => {
+        const prev = points[Math.max(0, i - 1)];
+        const next = points[Math.min(points.length - 1, i + 1)];
+
+        const dx = next.x - prev.x;
+        const dy = next.y - prev.y;
+        const length = Math.hypot(dx, dy) || 1;
+
+        // 輪郭の外側へ向かう法線
+        const nx = dy / length;
+        const ny = -dx / length;
+
+        return {
+            x: point.x + nx * frontCutOffset,
+            y: point.y + ny * frontCutOffset
+        };
+    });
+
+    // 「わ」の辺には裁断線を引かず、
+    // 襟ぐり側と裾側を中心線まで延ばす
+    const first = offsetPoints[0];
+    const last = offsetPoints[offsetPoints.length - 1];
+
+
+
+
+
+   const pathPoints = [
+    // 襟ぐりの裁断線を「わ」の位置から開始
+    { x: 0, y: offsetPoints[0].y },
+
+    // 襟ぐりから脇、裾までの裁断線
+    ...offsetPoints.slice(1).map((p) => ({
+        x: Math.max(0, p.x),
+        y: p.y
+    })),
+
+    // 裾の裁断線を「わ」の位置まで延ばす
+    { x: 0, y: last.y }
+];
+
+
+
+
+
+    return pathPoints
+        .map((p, i) =>
+            `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+        )
+        .join(" ");
+})();
+
+
+
+
+
+    const backOverlap = 6;
+    
+    const backBodicePath = isSeparatedOnePiece ? `
+        M 0 ${-(bodiceH * 0.5)}
+        L ${neckHalfW} ${-(bodiceH * 0.5) + 3}
+        L ${shoulderW} ${-(bodiceH * 0.5) + shoulderDrop}
+        Q ${(shoulderW + halfW) * 0.48} ${-(bodiceH * 0.5) + armholeDepth * 0.6} ${halfW} ${-(bodiceH * 0.5) + armholeDepth}
+        L ${halfW - actualWaistIndent * 0.4} ${(bodiceH * 0.5)}
+        L ${-backOverlap} ${(bodiceH * 0.5)}
+        L ${-backOverlap} ${-(bodiceH * 0.5)}
+        Z
+    ` : `
+        M 0 ${-(bodyH * 0.45)}
+        L ${neckHalfW} ${-(bodyH * 0.45) + 3}
+        L ${shoulderW} ${-(bodyH * 0.45) + shoulderDrop}
+        Q ${(shoulderW + halfW) * 0.48} ${-(bodyH * 0.45) + armholeDepth * 0.6} ${halfW} ${-(bodyH * 0.45) + armholeDepth}
+        Q ${halfW - actualWaistIndent} 0 ${halfW + actualFlareOffset} ${(bodyH * 0.45)}
+        L ${-backOverlap} ${(bodyH * 0.45)}
+        L ${-backOverlap} ${-(bodyH * 0.45)}
+        Z
+    `;
+
+
+
+
+
+
+
+{/* 後身頃：縫製線の外側に細い裁断線を作成 */}
+const backCutLinePath = (() => {
+    if (frontCutOffset <= 0) return "";
+
+    type Point = { x: number; y: number };
+    const points: Point[] = [];
+
+    const addPoint = (x: number, y: number) => {
+        points.push({ x, y });
+    };
+
+    const addCurve = (
+        start: Point,
+        control: Point,
+        end: Point
+    ) => {
+        for (let i = 1; i <= 20; i++) {
+            const t = i / 20;
+            const s = 1 - t;
+
+            addPoint(
+                s * s * start.x +
+                2 * s * t * control.x +
+                t * t * end.x,
+                s * s * start.y +
+                2 * s * t * control.y +
+                t * t * end.y
+            );
+        }
+    };
+
+    const top = isSeparatedOnePiece
+        ? -bodiceH * 0.5
+        : -bodyH * 0.45;
+
+    const bottom = isSeparatedOnePiece
+        ? bodiceH * 0.5
+        : bodyH * 0.45;
+
+    // 襟ぐり・肩
+    addPoint(0, top);
+    addPoint(neckHalfW, top + 3);
+    addPoint(shoulderW, top + shoulderDrop);
+
+    // 袖ぐり
+    addCurve(
+        { x: shoulderW, y: top + shoulderDrop },
+        {
+            x: (shoulderW + halfW) * 0.48,
+            y: top + armholeDepth * 0.6
+        },
+        { x: halfW, y: top + armholeDepth }
+    );
+
+    // 脇線
+    if (isSeparatedOnePiece) {
+        addPoint(
+            halfW - actualWaistIndent * 0.4,
+            bottom
+        );
+    } else {
+        addCurve(
+            { x: halfW, y: top + armholeDepth },
+            { x: halfW - actualWaistIndent, y: 0 },
+            { x: halfW + actualFlareOffset, y: bottom }
+        );
+    }
+
+    // 裾と背中心
+    addPoint(-backOverlap, bottom);
+    addPoint(-backOverlap, top);
+
+    // 閉じた輪郭の外側に点をずらす
+    const offsetPoints = points.map((point, i) => {
+        const prev = points[
+            (i - 1 + points.length) % points.length
+        ];
+        const next = points[
+            (i + 1) % points.length
+        ];
+
+        const dx = next.x - prev.x;
+        const dy = next.y - prev.y;
+        const len = Math.hypot(dx, dy) || 1;
+
+        return {
+            x: point.x + (dy / len) * frontCutOffset,
+            y: point.y - (dx / len) * frontCutOffset
+        };
+    });
+
+    return offsetPoints
+        .map(
+            (p, i) =>
+                `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+        )
+        .join(" ") + " Z";
+})();
+
+
+
+
+
+
+
+// 上下切替ワンピース：上身頃の裾とスカート上端の寸法確認
+if (isSeparatedOnePiece && !isOverlayMode) {
+    const bodiceHemWidth = (halfW - actualWaistIndent * 0.4) * 2;
+    const skirtTopWidth =
+    bodiceHemWidth *
+    (skirtGatherMode === "gather" ? 1.4 : 1.0);
+
+    console.log("上下切替ワンピースの接合寸法チェック", {
+        size,
+        bodiceHemCm: (bodiceHemWidth / scale).toFixed(2),
+        skirtTopCm: (skirtTopWidth / scale).toFixed(2),
+        differenceCm: ((skirtTopWidth - bodiceHemWidth) / scale).toFixed(2),
+    });
+}
+
+
+
+  const skirtWaistW =
+    (halfW - actualWaistIndent * 0.4) *
+    2 *
+    (skirtGatherMode === "gather" ? 1.4 : 1.0);
+    const skirtHemW = skirtWaistW + flareOffset * 2.2;
+    const separatedSkirtPath = `
+        M ${-skirtWaistW / 2} ${-(skirtPartH * 0.45)}
+        L ${skirtWaistW / 2} ${-(skirtPartH * 0.45)}
+        L ${skirtHemW / 2} ${(skirtPartH * 0.45)}
+        L ${-skirtHemW / 2} ${(skirtPartH * 0.45)}
+        Z
+    `;
+
+
+
+
+
+
+
+
+    // 上下切替ワンピース：スカートの裁断線
+    const separatedSkirtCutPath = (() => {
+        if (frontCutOffset <= 0) return "";
+
+        const topY = -skirtPartH * 0.45;
+        const bottomY = skirtPartH * 0.45;
+
+        const points = [
+            { x: -skirtWaistW / 2, y: topY },
+            { x: skirtWaistW / 2, y: topY },
+            { x: skirtHemW / 2, y: bottomY },
+            { x: -skirtHemW / 2, y: bottomY },
+        ];
+
+        const edges = points.map((p, i) => {
+            const q = points[(i + 1) % points.length];
+            const dx = q.x - p.x;
+            const dy = q.y - p.y;
+            const length = Math.hypot(dx, dy) || 1;
+
+            return {
+                x: p.x + (dy / length) * frontCutOffset,
+                y: p.y - (dx / length) * frontCutOffset,
+                dx,
+                dy,
+            };
+        });
+
+        const corners = edges.map((current, i) => {
+            const previous =
+                edges[(i - 1 + edges.length) % edges.length];
+
+            const cross =
+                previous.dx * current.dy -
+                previous.dy * current.dx;
+
+            if (Math.abs(cross) < 0.000001) {
+                return { x: current.x, y: current.y };
+            }
+
+            const rx = current.x - previous.x;
+            const ry = current.y - previous.y;
+            const t =
+                (rx * current.dy - ry * current.dx) / cross;
+
+            return {
+                x: previous.x + t * previous.dx,
+                y: previous.y + t * previous.dy,
+            };
+        });
+
+        return corners
+            .map((p, i) =>
+                `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+            )
+            .join(" ") + " Z";
+    })();
+
+
+
+
+
+
+
+
+    const sleeveBodyH = Math.max(flatSleeveH - sleeveCapH, 10);
+    const sleevePath = `
+        M ${-flatSleeveW / 2} ${-sleeveBodyH / 2}
+        C ${-flatSleeveW * 0.35} ${-sleeveBodyH / 2 - sleeveCapH * 0.3} ${-flatSleeveW * 0.2} ${-sleeveBodyH / 2 - sleeveCapH} 0 ${-sleeveBodyH / 2 - sleeveCapH}
+        C ${flatSleeveW * 0.2} ${-sleeveBodyH / 2 - sleeveCapH} ${flatSleeveW * 0.35} ${-sleeveBodyH / 2 - sleeveCapH * 0.3} ${flatSleeveW / 2} ${-sleeveBodyH / 2}
+        L ${sleeveCuffW / 2} ${sleeveBodyH / 2}
+        L ${-sleeveCuffW / 2} ${sleeveBodyH / 2}
+        Z
+    `;
+
+
+
+
+
+    // ======================================
+    // 袖：縫製線の外側に裁断線を作成
+    // ======================================
+    const sleeveCutLinePath = (() => {
+        if (frontCutOffset <= 0) return "";
+
+        type Point = { x: number; y: number };
+        const points: Point[] = [];
+
+        const addPoint = (x: number, y: number) => {
+            points.push({ x, y });
+        };
+
+        const addCubic = (
+            start: Point,
+            c1: Point,
+            c2: Point,
+            end: Point
+        ) => {
+            for (let i = 1; i <= 30; i++) {
+                const t = i / 30;
+                const s = 1 - t;
+
+                addPoint(
+                    s ** 3 * start.x +
+                    3 * s ** 2 * t * c1.x +
+                    3 * s * t ** 2 * c2.x +
+                    t ** 3 * end.x,
+                    s ** 3 * start.y +
+                    3 * s ** 2 * t * c1.y +
+                    3 * s * t ** 2 * c2.y +
+                    t ** 3 * end.y
+                );
+            }
+        };
+
+        const leftTop = {
+            x: -flatSleeveW / 2,
+            y: -sleeveBodyH / 2
+        };
+        const capTop = {
+            x: 0,
+            y: -sleeveBodyH / 2 - sleeveCapH
+        };
+        const rightTop = {
+            x: flatSleeveW / 2,
+            y: -sleeveBodyH / 2
+        };
+
+        addPoint(leftTop.x, leftTop.y);
+
+        addCubic(
+            leftTop,
+            {
+                x: -flatSleeveW * 0.35,
+                y: -sleeveBodyH / 2 - sleeveCapH * 0.3
+            },
+            {
+                x: -flatSleeveW * 0.2,
+                y: capTop.y
+            },
+            capTop
+        );
+
+        addCubic(
+            capTop,
+            {
+                x: flatSleeveW * 0.2,
+                y: capTop.y
+            },
+            {
+                x: flatSleeveW * 0.35,
+                y: -sleeveBodyH / 2 - sleeveCapH * 0.3
+            },
+            rightTop
+        );
+
+        addPoint(sleeveCuffW / 2, sleeveBodyH / 2);
+        addPoint(-sleeveCuffW / 2, sleeveBodyH / 2);
+
+        const offsetPoints = points.map((point, i) => {
+            const prev = points[
+                (i - 1 + points.length) % points.length
+            ];
+            const next = points[
+                (i + 1) % points.length
+            ];
+
+            const dx = next.x - prev.x;
+            const dy = next.y - prev.y;
+            const len = Math.hypot(dx, dy) || 1;
+
+            return {
+                x: point.x + (dy / len) * frontCutOffset,
+                y: point.y - (dx / len) * frontCutOffset
+            };
+        });
+
+        return offsetPoints
+            .map((p, i) =>
+                `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`
+            )
+            .join(" ") + " Z";
+    })();
+
+
+
+
+
+
+
+    // スカート・ボトムス共通：縫製線の外側に裁断線を作る
+    type OutlinePoint = { x: number; y: number };
+
+    
+
+
+
+    
+const makeOuterCutPath = (
+    points: OutlinePoint[],
+    offset: number
+): string => {
+    if (offset <= 0 || points.length < 3) return "";
+
+    // 始点と終点の重複を除去する
+    const cleanPoints = points.filter((p, i) => {
+        if (i === 0) return true;
+        const prev = points[i - 1];
+        return Math.hypot(p.x - prev.x, p.y - prev.y) > 0.001;
+    });
+
+    if (cleanPoints.length > 2) {
+        const first = cleanPoints[0];
+        const last = cleanPoints[cleanPoints.length - 1];
+
+        if (Math.hypot(first.x - last.x, first.y - last.y) < 0.001) {
+            cleanPoints.pop();
+        }
+    }
+
+    const count = cleanPoints.length;
+    if (count < 3) return "";
+
+    const area = cleanPoints.reduce((sum, p, i) => {
+        const q = cleanPoints[(i + 1) % count];
+        return sum + p.x * q.y - q.x * p.y;
+    }, 0);
+
+    const direction = area >= 0 ? 1 : -1;
+
+    const normals = cleanPoints.map((p, i) => {
+        const q = cleanPoints[(i + 1) % count];
+        const dx = q.x - p.x;
+        const dy = q.y - p.y;
+        const length = Math.hypot(dx, dy) || 1;
+
+        return {
+            x: direction * dy / length,
+            y: -direction * dx / length
+        };
+    });
+
+    const shifted = cleanPoints.map((p, i) => {
+        const previous = normals[(i - 1 + count) % count];
+        const current = normals[i];
+
+        const nx = previous.x + current.x;
+        const ny = previous.y + current.y;
+        const length = Math.hypot(nx, ny);
+
+        // 鋭角で点線が大きく飛び出さないようにする
+        if (length < 0.001) {
+            return {
+                x: p.x + current.x * offset,
+                y: p.y + current.y * offset
+            };
+        }
+
+        const ux = nx / length;
+        const uy = ny / length;
+        const dot = ux * current.x + uy * current.y;
+
+        // 角の飛び出しを最大1.5倍に制限
+        const distance = Math.min(
+            offset * 1.5,
+            offset / Math.max(dot, 0.01)
+        );
+
+        return {
+            x: p.x + ux * distance,
+            y: p.y + uy * distance
+        };
+    });
+
+    return shifted
+        .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+        .join(" ") + " Z";
+};
+
+
+
+
+
+
+
+
+
+
+    // 二次ベジェ曲線を点列に変換
+    const sampleQuadratic = (
+        start: OutlinePoint,
+        control: OutlinePoint,
+        end: OutlinePoint,
+        steps = 24
+    ): OutlinePoint[] =>
+        Array.from({ length: steps }, (_, i) => {
+            const t = (i + 1) / steps;
+            const s = 1 - t;
+
+            return {
+                x: s * s * start.x + 2 * s * t * control.x + t * t * end.x,
+                y: s * s * start.y + 2 * s * t * control.y + t * t * end.y
+            };
+        });
+
+
+
+
+
+    const skHalfWaist = (bodyW * 0.5) * 1.05;
+    const skH = Math.max(bodyH * 0.75, 35);
+    const skFlareAdd = (hemFlare * 4.0);
+    const skHalfHem = skHalfWaist + 10 + skFlareAdd;
+    const skWaistCurveDepth = hemFlare * 1.0; 
+    const skHemCurveDepth = 5 + (hemFlare * 1.5);
+    const skTopY = -skH * 0.5;
+    const skBottomY = skH * 0.5;
+    
+    const skirtPath = `
+        M ${-skHalfWaist} ${skTopY}
+        Q 0 ${skTopY + skWaistCurveDepth} ${skHalfWaist} ${skTopY}
+        L ${skHalfHem} ${skBottomY}
+        Q 0 ${skBottomY + skHemCurveDepth} ${-skHalfHem} ${skBottomY}
+        Z
+    `;
+
+
+
+
+    const skirtCutPath = makeOuterCutPath(
+        [
+            { x: -skHalfWaist, y: skTopY },
+            ...sampleQuadratic(
+                { x: -skHalfWaist, y: skTopY },
+                { x: 0, y: skTopY + skWaistCurveDepth },
+                { x: skHalfWaist, y: skTopY }
+            ),
+            { x: skHalfHem, y: skBottomY },
+            ...sampleQuadratic(
+                { x: skHalfHem, y: skBottomY },
+                { x: 0, y: skBottomY + skHemCurveDepth },
+                { x: -skHalfHem, y: skBottomY }
+            )
+        ],
+        frontCutOffset
+    );
+
+
+
+
+
+    const pY_top = -bodyH / 2;
+    const pY_hip = -bodyH / 2 + crotchLength;
+    const pY_hem = bodyH / 2;
+    const fWaistX = bodyW * 0.22;
+    const fHipX = bodyW * 0.26;
+    const fHemX = pantHemW * 0.5;
+    const fCrotchX = -(thighW * 0.5 + 6);
+    const frontPantPath = `
+        M ${-fWaistX + 3} ${pY_top + 3} 
+        L ${fWaistX} ${pY_top} 
+        Q ${fHipX + 3} ${(pY_top + pY_hip)/2} ${fHipX} ${pY_hip} 
+        L ${fHemX} ${pY_hem} 
+        L ${-fHemX} ${pY_hem} 
+        L ${fCrotchX} ${pY_hip} 
+        Q ${-fWaistX + 2} ${(pY_top + pY_hip)/2} ${-fWaistX + 3} ${pY_top + 3} 
+        Z
+    `;
+    const bWaistX = bodyW * 0.22;
+
+
+ const bHipX = fHipX;
+
+
+   const bHemX = fHemX;
+
+
+
+   const bCrotchX = bHemX + Math.abs(fCrotchX + fHemX);
+
+
+
+
+    const backPantPath = `
+        M ${-bWaistX} ${pY_top} 
+        L ${bWaistX} ${pY_top - 6} 
+        Q ${bWaistX - 2} ${(pY_top + pY_hip)/2 + 5} ${bCrotchX} ${pY_hip} 
+        L ${bHemX} ${pY_hem} 
+        L ${-bHemX} ${pY_hem} 
+        L ${-bHipX} ${pY_hip} 
+        Q ${-bHipX - 3} ${(pY_top + pY_hip)/2} ${-bWaistX} ${pY_top} 
+        Z
+    `;
+
+
+
+
+    const frontPantCutPath = makeOuterCutPath(
+        [
+            { x: -fWaistX + 3, y: pY_top + 3 },
+            { x: fWaistX, y: pY_top },
+            ...sampleQuadratic(
+                { x: fWaistX, y: pY_top },
+                { x: fHipX + 3, y: (pY_top + pY_hip) / 2 },
+                { x: fHipX, y: pY_hip }
+            ),
+            { x: fHemX, y: pY_hem },
+            { x: -fHemX, y: pY_hem },
+            { x: fCrotchX, y: pY_hip },
+            ...sampleQuadratic(
+                { x: fCrotchX, y: pY_hip },
+                { x: -fWaistX + 2, y: (pY_top + pY_hip) / 2 },
+                { x: -fWaistX + 3, y: pY_top + 3 }
+            )
+        ],
+        frontCutOffset
+    );
+
+
+
+
+
+
+
+
+    // =====================================
+    // ボトムス：前後パンツの縫い合わせ寸法チェック
+    // ※型紙の形状は変更しない
+    // =====================================
+    if (category === "ボトムス" && !isOverlayMode) {
+        type PantPoint = { x: number; y: number };
+
+        // 直線の長さ
+        const lineLength = (a: PantPoint, b: PantPoint) =>
+            Math.hypot(b.x - a.x, b.y - a.y);
+
+        // 二次ベジェ曲線の長さ
+        const curveLength = (
+            start: PantPoint,
+            control: PantPoint,
+            end: PantPoint
+        ) => {
+            let total = 0;
+            let previous = start;
+
+            for (let i = 1; i <= 100; i++) {
+                const t = i / 100;
+                const s = 1 - t;
+                const point = {
+                    x: s * s * start.x + 2 * s * t * control.x + t * t * end.x,
+                    y: s * s * start.y + 2 * s * t * control.y + t * t * end.y,
+                };
+                total += lineLength(previous, point);
+                previous = point;
+            }
+            return total;
+        };
+
+        // 外側の縫い合わせ線（脇線）
+        const frontOuter =
+            curveLength(
+                { x: fWaistX, y: pY_top },
+                { x: fHipX + 3, y: (pY_top + pY_hip) / 2 },
+                { x: fHipX, y: pY_hip }
+            ) +
+            lineLength(
+                { x: fHipX, y: pY_hip },
+                { x: fHemX, y: pY_hem }
+            );
+
+        const backOuter =
+            curveLength(
+                { x: -bWaistX, y: pY_top },
+                { x: -bHipX - 3, y: (pY_top + pY_hip) / 2 },
+                { x: -bHipX, y: pY_hip }
+            ) +
+            lineLength(
+                { x: -bHipX, y: pY_hip },
+                { x: -bHemX, y: pY_hem }
+            );
+
+        // 内側の縫い合わせ線（股下線）
+        const frontInner = lineLength(
+            { x: fCrotchX, y: pY_hip },
+            { x: -fHemX, y: pY_hem }
+        );
+
+        const backInner = lineLength(
+            { x: bCrotchX, y: pY_hip },
+            { x: bHemX, y: pY_hem }
+        );
+
+        // cm換算（現在のSVG計算スケール）
+        const toCm = (value: number) => value / scale;
+        const fmt = (value: number) => toCm(value).toFixed(2);
+
+        console.log("型紙のボトムス縫い合わせチェック", {
+            category,
+            size,
+            frontOuterCm: fmt(frontOuter),
+            backOuterCm: fmt(backOuter),
+            outerDifferenceCm: fmt(Math.abs(frontOuter - backOuter)),
+            frontInnerCm: fmt(frontInner),
+            backInnerCm: fmt(backInner),
+            innerDifferenceCm: fmt(Math.abs(frontInner - backInner)),
+        });
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const backPantCutPath = makeOuterCutPath(
+        [
+            { x: -bWaistX, y: pY_top },
+            { x: bWaistX, y: pY_top - 6 },
+            ...sampleQuadratic(
+                { x: bWaistX, y: pY_top - 6 },
+                { x: bWaistX - 2, y: (pY_top + pY_hip) / 2 + 5 },
+                { x: bCrotchX, y: pY_hip }
+            ),
+            { x: bHemX, y: pY_hem },
+            { x: -bHemX, y: pY_hem },
+            { x: -bHipX, y: pY_hip },
+            ...sampleQuadratic(
+                { x: -bHipX, y: pY_hip },
+                { x: -bHipX - 3, y: (pY_top + pY_hip) / 2 },
+                { x: -bWaistX, y: pY_top }
+            )
+        ],
+        frontCutOffset
+    );
+
+
+
+
+
+
+
+    const overlayBodiceW = bodyW;
+    const overlayWaistW = bodyW - waistIndent * 0.8;
+    const overlaySkirtBottomW = overlayWaistW + flareOffset * 2.2;
+
+
+
+
+    const PAD = isSmallDoll ? 45 : 65;
+
+
+
+
+    let patternLeftX = 250;
+    let patternRightX = 250;
+    let patternCenterX = 250;
+    let maxPatternWidth = 500;
+    let maxPatternHeight = 500;
+
+    let skCenterY = 250;
+    let pCenterY = 240;
+
+    let bodiceTopY = 100;
+    let collarY = 180;
+    let bottomPartsY = 260;
+    let sleeveY = 340;
+    let normalSleeveY = 300;
+    let pantGap = 80;
+
+    if (category === "スカート") {
+        patternCenterX = Math.max(250, skHalfHem + PAD);
+        skCenterY = Math.max(250, -skTopY + PAD + (isSmallDoll ? 15 : 25));
+        maxPatternWidth = Math.max(500, patternCenterX + skHalfHem + PAD);
+        maxPatternHeight = Math.max(500, skCenterY + skBottomY + PAD);
+    } else if (category === "ボトムス") {
+        pantGap = thighW / 2 + (isSmallDoll ? 25 : 40);
+        const leftPantLocalLeft = Math.min(-fWaistX + 3, fCrotchX, -fHemX);
+        const rightPantLocalRight = Math.max(bWaistX, bCrotchX, bHemX);
+        patternCenterX = Math.max(250, PAD + pantGap - leftPantLocalLeft);
+        pCenterY = Math.max(240, -pY_top + PAD + (isSmallDoll ? 15 : 25));
+        maxPatternWidth = Math.max(500, patternCenterX + pantGap + rightPantLocalRight + PAD);
+        maxPatternHeight = Math.max(500, pCenterY + pY_hem + PAD);
+    } else {
+        const topPartH = isSeparatedOnePiece ? (bodiceH * 0.5) : (bodyH * 0.45);
+        bodiceTopY = Math.max(60, topPartH + PAD + (isSmallDoll ? 15 : 25));
+        const bodiceBottomY = bodiceTopY + topPartH;
+        const cH_val = collarType !== "襟なし" ? cH : 0;
+        collarY = bodiceBottomY + Math.max(15, cH_val + 8) + (isSmallDoll ? 15 : 25);
+
+
+
+
+
+     bottomPartsY = collarType !== "襟なし"
+    ? collarY + cH_val + (isSmallDoll ? 45 : 55)
+    : bodiceBottomY + (isSmallDoll ? 45 : 55);
+
+
+
+
+
+        const sleeveTotalCap = (sleeveBodyH / 2 + sleeveCapH);
+        sleeveY = bottomPartsY + sleeveTotalCap + (isSmallDoll ? 15 : 25);
+        normalSleeveY = bottomPartsY + sleeveTotalCap + (isSmallDoll ? 15 : 25);
+
+        const frontHalfExt = Math.max(halfW + actualFlareOffset, shoulderW);
+        const backHalfExt = Math.max(halfW + actualFlareOffset, shoulderW, backOverlap);
+
+        let col1HalfW = frontHalfExt;
+        let col2HalfW = backHalfExt;
+
+        if (isSeparatedOnePiece) {
+            col1HalfW = Math.max(col1HalfW, skirtHemW / 2);
+            if (hasSleeve) col2HalfW = Math.max(col2HalfW, flatSleeveW / 2);
+        }
+
+        patternLeftX = Math.max(120, col1HalfW + PAD);
+        patternRightX = patternLeftX + col1HalfW + col2HalfW + (isSmallDoll ? 20 : PAD);
+        patternCenterX = (patternLeftX + patternRightX) / 2;
+
+        if (hasSleeve && !isSeparatedOnePiece) {
+            const currentGap = patternRightX - patternLeftX - col1HalfW - col2HalfW;
+            const minGap = flatSleeveW + (isSmallDoll ? 20 : PAD);
+            if (currentGap < minGap) {
+                patternRightX += (minGap - currentGap);
+                patternCenterX = (patternLeftX + patternRightX) / 2;
+            }
+        }
+
+        maxPatternWidth = Math.max(500, patternRightX + col2HalfW + PAD);
+
+        if (isSeparatedOnePiece) {
+            maxPatternHeight = Math.max(500, bottomPartsY + skirtPartH * 0.9 + PAD + (isSmallDoll ? 15 : 30));
+            if (hasSleeve) maxPatternHeight = Math.max(maxPatternHeight, sleeveY + (flatSleeveH / 2) + PAD + (isSmallDoll ? 15 : 30));
+        } else {
+            maxPatternHeight = Math.max(500, bodiceBottomY + PAD + (isSmallDoll ? 15 : 30));
+            if (hasSleeve) maxPatternHeight = Math.max(maxPatternHeight, normalSleeveY + (flatSleeveH / 2) + PAD + (isSmallDoll ? 15 : 30));
+        }
+        if (collarType !== "襟なし") {
+            maxPatternHeight = Math.max(maxPatternHeight, collarY + cH_val + PAD + (isSmallDoll ? 15 : 30));
+        }
+    }
+
+    const frontTopY = isSeparatedOnePiece ? -(bodiceH * 0.5) : -(bodyH * 0.45);
+    const backTopY = isSeparatedOnePiece ? -(bodiceH * 0.5) : -(bodyH * 0.45);
+    const skirtSepTopY = -(skirtPartH * 0.45);
+    const sleeveTopY = -(sleeveBodyH / 2 + sleeveCapH);
+
+
+
+
+    // 後身頃：縫い代の外側にタイトルを配置
+const backPartWidth = halfW + actualFlareOffset;
+const isBackNarrow = backPartWidth < 65 || isSmallDoll;
+
+const backTextY2 =
+    backTopY - frontCutOffset - 5;
+
+const backTextY1 =
+    backTextY2 - labelLineGap;
+
+const backTextX =
+    isBackNarrow ? halfW * 0.25 : halfW * 0.35;
+
+
+
+
+
+
+
+   const frontTextY1 = frontTopY - labelGap;
+const frontTextY2 = frontTextY1 + labelLineGap;
+
+
+
+
+  // 袖：縫い代の上にタイトルと裁断情報を配置
+const sleeveTextY2 =
+    sleeveTopY - frontCutOffset - 5;
+
+const sleeveTextY1 =
+    sleeveTextY2 - labelLineGap;
+
+
+
+
+const skirtSepTextY1 = skirtSepTopY - 14;
+const skirtSepTextY2 = skirtSepTopY - 6;
+
+
+
+
+
+
+const frontBottomY = isSeparatedOnePiece
+    ? bodiceH * 0.5
+    : bodyH * 0.45;
+
+const frontWidthDimensionY =
+    frontBottomY + dimensionOffset + frontCutOffset + 3;
+
+
+
+
+
+
+
+    // ================================
+// 合印
+// ================================
+const notchSize = isSmallDoll ? 2.5 : isMidDoll ? 3.5 : 4.5;
+
+// 前身頃・右脇の合印位置
+const frontNotchX = halfW;
+const frontNotchY =
+    frontTopY + armholeDepth + (frontBottomY - (frontTopY + armholeDepth)) * 0.45;
+
+
+
+
+
+
+// 後身頃・右脇の合印位置
+const backBottomY = isSeparatedOnePiece
+    ? bodiceH * 0.5
+    : bodyH * 0.45;
+
+const backNotchX = halfW;
+
+const backNotchY =
+    backTopY +
+    armholeDepth +
+    (backBottomY - (backTopY + armholeDepth)) * 0.45;
+
+
+
+
+
+// =====================================
+// 前身頃・後身頃の脇線長さチェック
+// ※型紙の形状は変更しない
+// =====================================
+
+// 二次ベジェ曲線の長さを計算
+const measureCurveLength = (
+    start: { x: number; y: number },
+    control: { x: number; y: number },
+    end: { x: number; y: number }
+) => {
+    let total = 0;
+    let previous = start;
+
+    for (let i = 1; i <= 100; i++) {
+        const t = i / 100;
+        const s = 1 - t;
+
+        const point = {
+            x: s * s * start.x + 2 * s * t * control.x + t * t * end.x,
+            y: s * s * start.y + 2 * s * t * control.y + t * t * end.y,
+        };
+
+        total += Math.hypot(
+            point.x - previous.x,
+            point.y - previous.y
+        );
+
+        previous = point;
+    }
+
+    return total;
+};
+
+// 脇線の始点（袖ぐりの下）
+const sideStart = {
+    x: halfW,
+    y: frontTopY + armholeDepth,
+};
+
+// 前身頃・後身頃の脇線長さ
+const sideSeamLength = isSeparatedOnePiece
+    ? Math.hypot(
+        halfW - actualWaistIndent * 0.4 - sideStart.x,
+        frontBottomY - sideStart.y
+    )
+    : measureCurveLength(
+        sideStart,
+        { x: halfW - actualWaistIndent, y: 0 },
+        { x: halfW + actualFlareOffset, y: frontBottomY }
+    );
+
+// 現在の型紙では前後の脇線に同じ計算式を使用
+const frontSideSeamLength = sideSeamLength;
+const backSideSeamLength = sideSeamLength;
+
+// SVGの基本スケールに基づく参考寸法（cm）
+const frontSideSeamCm = frontSideSeamLength / scale;
+const backSideSeamCm = backSideSeamLength / scale;
+
+// 前後の差（cm）
+const sideSeamDifferenceCm = Math.abs(
+    frontSideSeamCm - backSideSeamCm
+);
+
+// 開発時の確認用
+console.log("型紙の脇線チェック", {
+    category,
+    size,
+    frontSideSeamCm: frontSideSeamCm.toFixed(2),
+    backSideSeamCm: backSideSeamCm.toFixed(2),
+    differenceCm: sideSeamDifferenceCm.toFixed(2),
+});
+
+
+
+
+
+
+
+// =====================================
+// 袖ぐり・袖山の長さチェック
+// ※型紙の形状は変更しない
+// =====================================
+
+// 三次ベジェ曲線の長さを計算
+const measureCubicLength = (
+    start: { x: number; y: number },
+    control1: { x: number; y: number },
+    control2: { x: number; y: number },
+    end: { x: number; y: number }
+) => {
+    let total = 0;
+    let previous = start;
+
+    for (let i = 1; i <= 100; i++) {
+        const t = i / 100;
+        const s = 1 - t;
+
+        const point = {
+            x:
+                s ** 3 * start.x +
+                3 * s ** 2 * t * control1.x +
+                3 * s * t ** 2 * control2.x +
+                t ** 3 * end.x,
+            y:
+                s ** 3 * start.y +
+                3 * s ** 2 * t * control1.y +
+                3 * s * t ** 2 * control2.y +
+                t ** 3 * end.y,
+        };
+
+        total += Math.hypot(
+            point.x - previous.x,
+            point.y - previous.y
+        );
+
+        previous = point;
+    }
+
+    return total;
+};
+
+// 身頃の袖ぐり：前後で同じ曲線を使用
+const armholeStart = {
+    x: shoulderW,
+    y: frontTopY + shoulderDrop,
+};
+
+const armholeControl = {
+    x: (shoulderW + halfW) * 0.48,
+    y: frontTopY + armholeDepth * 0.6,
+};
+
+const armholeEnd = {
+    x: halfW,
+    y: frontTopY + armholeDepth,
+};
+
+const frontArmholeLength = measureCurveLength(
+    armholeStart,
+    armholeControl,
+    armholeEnd
+);
+
+const backArmholeLength = measureCurveLength(
+    armholeStart,
+    armholeControl,
+    armholeEnd
+);
+
+// 袖山の左端・頂点・右端
+const sleeveLeft = {
+    x: -flatSleeveW / 2,
+    y: -sleeveBodyH / 2,
+};
+
+const sleeveTop = {
+    x: 0,
+    y: -sleeveBodyH / 2 - sleeveCapH,
+};
+
+const sleeveRight = {
+    x: flatSleeveW / 2,
+    y: -sleeveBodyH / 2,
+};
+
+// 袖山の左半分
+const sleeveFrontLength = measureCubicLength(
+    sleeveLeft,
+    {
+        x: -flatSleeveW * 0.35,
+        y: -sleeveBodyH / 2 - sleeveCapH * 0.3,
+    },
+    {
+        x: -flatSleeveW * 0.2,
+        y: sleeveTop.y,
+    },
+    sleeveTop
+);
+
+// 袖山の右半分
+const sleeveBackLength = measureCubicLength(
+    sleeveTop,
+    {
+        x: flatSleeveW * 0.2,
+        y: sleeveTop.y,
+    },
+    {
+        x: flatSleeveW * 0.35,
+        y: -sleeveBodyH / 2 - sleeveCapH * 0.3,
+    },
+    sleeveRight
+);
+
+// SVG上の長さをcmに換算
+const frontArmholeCm = frontArmholeLength / scale;
+const backArmholeCm = backArmholeLength / scale;
+
+const sleeveFrontCm = sleeveFrontLength / scale;
+const sleeveBackCm = sleeveBackLength / scale;
+
+const totalArmholeCm =
+    frontArmholeCm + backArmholeCm;
+
+const totalSleeveCm =
+    sleeveFrontCm + sleeveBackCm;
+
+const sleeveDifferenceCm =
+    totalSleeveCm - totalArmholeCm;
+
+// 袖付きのトップスだけ確認
+if (isAnyTop && hasSleeve && !isOverlayMode) {
+    console.log("型紙の袖ぐりチェック", {
+        category,
+        size,
+
+
+
+
+ // 袖ぐり・袖山の寸法差の原因調査
+    armholeDepthCm: (armholeDepth / scale).toFixed(2),
+    flatSleeveWidthCm: (flatSleeveW / scale).toFixed(2),
+    sleeveCapHeightCm: (sleeveCapH / scale).toFixed(2),
+    bodiceHeightCm: (bodiceH / scale).toFixed(2),
+
+
+
+
+
+
+        frontArmholeCm: frontArmholeCm.toFixed(2),
+        backArmholeCm: backArmholeCm.toFixed(2),
+        totalArmholeCm: totalArmholeCm.toFixed(2),
+        sleeveFrontCm: sleeveFrontCm.toFixed(2),
+        sleeveBackCm: sleeveBackCm.toFixed(2),
+        totalSleeveCm: totalSleeveCm.toFixed(2),
+        differenceCm: sleeveDifferenceCm.toFixed(2),
+    });
+}
+
+
+
+
+
+
+
+
+// ================================
+// 袖の合印
+// 左側 = 前身頃側：1個
+// 右側 = 後身頃側：2個
+// ================================
+
+// 袖山の左右に合印を配置
+const sleeveNotchY =
+    -sleeveBodyH / 2 - sleeveCapH * 0.35;
+
+const sleeveFrontNotchX =
+    -flatSleeveW * 0.35;
+
+const sleeveBackNotchX =
+    flatSleeveW * 0.35;
+
+// 後側の2個目を少し下へずらす
+const sleeveBackNotchY2 =
+    sleeveNotchY + notchSize * 3.2;
+
+
+
+
+
+
+
+    const viewBoxStr = isOverlayMode ? "0 0 500 500" : `0 0 ${maxPatternWidth} ${maxPatternHeight}`;
+
+
+
+
+
+
+// =====================================
+// 地の目線（上下矢印付き）
+// =====================================
+const GrainlineMark = ({
+    x,
+    y1,
+    y2,
+}: {
+    x: number;
+    y1: number;
+    y2: number;
+}) => (
+    <g className="pattern-grainline">
+        <line
+            x1={x}
+            y1={y1}
+            x2={x}
+            y2={y2}
+            stroke="#777"
+            strokeWidth="0.8"
+        />
+
+        <path
+            d={`M ${x - 3} ${y1 + 5} L ${x} ${y1} L ${x + 3} ${y1 + 5}`}
+            fill="none"
+            stroke="#777"
+            strokeWidth="0.8"
+        />
+
+        <path
+            d={`M ${x - 3} ${y2 - 5} L ${x} ${y2} L ${x + 3} ${y2 - 5}`}
+            fill="none"
+            stroke="#777"
+            strokeWidth="0.8"
+        />
+    </g>
+);
+
+
+
+
+
+
+
+    const svgStyle = isOverlayMode ? { width: "100%", height: "100%" } : { width: `${maxPatternWidth}px`, height: `${maxPatternHeight}px` };
+
+    return (
+        <svg
+            ref={svgRef}
+            viewBox={viewBoxStr}
+            style={svgStyle}
+            data-render-width={maxPatternWidth}
+            data-render-height={maxPatternHeight}
+            className={`select-none block ${isOverlayMode ? 'p-2' : ''}`}
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <style>{`
+                .pattern-label-title {
+                    font-weight: bold;
+                    fill: #111;
+                    paint-order: stroke fill;
+                    stroke: #ffffff;
+                    stroke-width: 3.5px;
+                    stroke-linejoin: round;
+                }
+                .pattern-label-sub {
+                    fill: #333;
+                    paint-order: stroke fill;
+                    stroke: #ffffff;
+                    stroke-width: 2.8px;
+                    stroke-linejoin: round;
+                }
+            `}</style>
+
+          {!isOverlayMode && (
+    <defs>
+        <pattern
+            id="patternGrid"
+            width="10"
+            height="10"
+            patternUnits="userSpaceOnUse"
+        >
+            <path
+                d="M 10 0 L 0 0 0 10"
+                fill="none"
+                stroke="#ececec"
+                strokeWidth="0.5"
+            />
+        </pattern>
+    </defs>
+)}
+
+{!isOverlayMode && (
+    <rect
+        width="100%"
+        height="100%"
+        fill="url(#patternGrid)"
+        className="pattern-grid-rect"
+    />
+)}
+
+
+
+
+{/* 印刷サイズ確認用：30mm × 30mm */}
+{!isOverlayMode && (
+    <g id="print-scale-check">
+        <rect
+            x={15}
+            y={15}
+            width={30}
+            height={30}
+            fill="white"
+            stroke="#111"
+            strokeWidth={0.8}
+        />
+        <text
+            x={30}
+            y={53}
+            textAnchor="middle"
+            fontSize={5}
+            fill="#111"
+        >
+            30mm × 30mm
+        </text>
+    </g>
+)}
+
+
+
+
+
+            {isOverlayMode ? (
+                <g id="finished-clothing-silhouette">
+                    {isAnyTop && (
+                        <>
+                            {hasSleeve && (
+                                <>
+                                    <g transform={`translate(${centerX - shoulderOffset}, ${topY}) rotate(${sleeveAngle})`}>
+                                        <path
+                                            d={`
+                                                M ${-overlaySleeveW / 2} 0
+                                                Q 0 ${-puffHeight} ${overlaySleeveW / 2} 0
+                                                L ${overlayCuffW / 2} ${overlaySleeveH}
+                                                L ${-overlayCuffW / 2} ${overlaySleeveH}
+                                                Z
+                                            `}
+                                            fill="rgba(255, 255, 255, 0.65)"
+                                            stroke="#111"
+                                            strokeWidth="2"
+                                        />
+                                    </g>
+                                    <g transform={`translate(${centerX + shoulderOffset}, ${topY}) rotate(${-sleeveAngle})`}>
+                                        <path
+                                            d={`
+                                                M ${-overlaySleeveW / 2} 0
+                                                Q 0 ${-puffHeight} ${overlaySleeveW / 2} 0
+                                                L ${overlayCuffW / 2} ${overlaySleeveH}
+                                                L ${-overlayCuffW / 2} ${overlaySleeveH}
+                                                Z
+                                            `}
+                                            fill="rgba(255, 255, 255, 0.65)"
+                                            stroke="#111"
+                                            strokeWidth="2"
+                                        />
+                                    </g>
+                                </>
+                            )}
+
+                            <g transform={`translate(${centerX}, ${topY})`}>
+                                {isSeparatedOnePiece ? (
+                                    <>
+                                        <path
+                                            d={`
+                                                M ${-overlayBodiceW / 2} 0
+                                                Q 0 ${neckCurvature} ${overlayBodiceW / 2} 0
+                                                L ${overlayWaistW / 2} ${bodiceH}
+                                                L ${-overlayWaistW / 2} ${bodiceH}
+                                                Z
+                                            `}
+                                            fill="rgba(255, 255, 255, 0.75)"
+                                            stroke="#111"
+                                            strokeWidth="2.2"
+                                        />
+                                        <path
+                                            d={`
+                                                M ${-overlayWaistW / 2} ${bodiceH}
+                                                L ${overlayWaistW / 2} ${bodiceH}
+                                                L ${overlaySkirtBottomW / 2} ${bodyH}
+                                                L ${-overlaySkirtBottomW / 2} ${bodyH}
+                                                Z
+                                            `}
+                                            fill="rgba(255, 255, 255, 0.75)"
+                                            stroke="#111"
+                                            strokeWidth="2.2"
+                                        />
+                                    </>
+                                ) : (
+                                    <path
+                                        d={`
+                                            M ${-(bodyW / 2)} 0
+                                            Q 0 ${neckCurvature} ${(bodyW / 2)} 0
+                                            L ${(bodyW / 2)} ${Math.min(bodyH * 0.3, 35 * overlayZoom)}
+                                            Q ${(bodyW / 2) - actualWaistIndent} ${bodyH * 0.45} ${(bodyW / 2) + actualFlareOffset} ${bodyH}
+                                            L ${-(bodyW / 2) - actualFlareOffset} ${bodyH}
+                                            Q ${-(bodyW / 2) + actualWaistIndent} ${bodyH * 0.45} ${-(bodyW / 2)} ${Math.min(bodyH * 0.3, 35 * overlayZoom)}
+                                            Z
+                                        `}
+                                        fill="rgba(255, 255, 255, 0.75)"
+                                        stroke="#111"
+                                        strokeWidth="2.2"
+                                    />
+                                )}
+                                
+                                {collarType !== "襟なし" && (
+                                    <>
+                                        <path
+                                            d={collarType === "角襟" ? overlayPointedCollarPath : overlayRoundCollarPath}
+                                            fill="rgba(255, 255, 255, 0.9)"
+                                            stroke="#111"
+                                            strokeWidth="1.5"
+                                        />
+                                        <g transform="scale(-1, 1)">
+                                            <path
+                                                d={collarType === "角襟" ? overlayPointedCollarPath : overlayRoundCollarPath}
+                                                fill="rgba(255, 255, 255, 0.9)"
+                                                stroke="#111"
+                                                strokeWidth="1.5"
+                                            />
+                                        </g>
+                                    </>
+                                )}
+
+                                <text x="0" y={Math.min(bodyH * 0.4, 55 * overlayZoom)} textAnchor="middle" fill="#222" fontSize={11 * Math.min(overlayZoom, 1.4)} fontWeight="bold">
+                                    {category}
+                                </text>
+                                <text x="0" y={Math.min(bodyH * 0.4 + 16 * overlayZoom, 71 * overlayZoom)} textAnchor="middle" fill="#555" fontSize={8.5 * Math.min(overlayZoom, 1.4)}>
+                                    丈:{length.toFixed(1)}cm / 幅:{width.toFixed(1)}cm {isWoven ? "(布帛ゆとり込)" : ""}
+                                </text>
+                            </g>
+                        </>
+                    )}
+
+                    {category === "スカート" && (
+                        <g transform={`translate(${centerX}, ${topY + 60 * overlayZoom})`}>
+                            <path
+                                d={`
+                                    M ${-(bodyW * 0.4)} 0
+                                    Q 0 ${6 * overlayZoom} ${(bodyW * 0.4)} 0
+                                    L ${(bodyW * 0.4) + flareOffset} ${bodyH}
+                                    Q 0 ${bodyH + (12 + flareOffset * 0.2) * overlayZoom} ${-(bodyW * 0.4) - flareOffset} ${bodyH}
+                                    Z
+                                `}
+                                fill="rgba(255, 255, 255, 0.75)"
+                                stroke="#111"
+                                strokeWidth="2.2"
+                            />
+                            <text x="0" y={Math.min(bodyH * 0.5, 45 * overlayZoom)} textAnchor="middle" fill="#222" fontSize={11 * Math.min(overlayZoom, 1.4)} fontWeight="bold">スカート</text>
+                            <text x="0" y={Math.min(bodyH * 0.5 + 16 * overlayZoom, 61 * overlayZoom)} textAnchor="middle" fill="#555" fontSize={8.5 * Math.min(overlayZoom, 1.4)}>丈:{length.toFixed(1)}cm</text>
+                        </g>
+                    )}
+
+                    {category === "ボトムス" && (
+                        <g transform={`translate(${centerX}, ${topY + 60 * overlayZoom})`}>
+                            {[-1, 1].map((dir, idx) => (
+                                <path
+                                    key={idx}
+                                    d={`
+                                        M ${dir * 3 * overlayZoom} 0
+                                        L ${dir * (bodyW * 0.35)} 0
+                                        L ${dir * (bodyW * 0.35 + (thighW * 0.2))} ${crotchLength}
+                                        L ${dir * (pantHemW / 2 + 10 * overlayZoom)} ${bodyH}
+                                        L ${dir * 4 * overlayZoom} ${bodyH}
+                                        L ${dir * 4 * overlayZoom} ${crotchLength}
+                                        Z
+                                    `}
+                                    fill="rgba(255, 255, 255, 0.75)"
+                                    stroke="#111"
+                                    strokeWidth="2.2"
+                                />
+                            ))}
+                            <text x="0" y={Math.min(bodyH * 0.4, 40 * overlayZoom)} textAnchor="middle" fill="#222" fontSize={11 * Math.min(overlayZoom, 1.4)} fontWeight="bold">パンツ</text>
+                        </g>
+                    )}
+                </g>
+            ) : (
+                <g id="flat-pattern-pieces" transform="translate(0, 0)">
+                    {isAnyTop && (
+                        <>
+                          
+                          
+                          
+                          
+                          
+                          
+                            <g id="piece-front" transform={`translate(${patternLeftX}, ${bodiceTopY})`}>
+                               {frontCutOffset > 0 && (
+    <path
+        d={frontCutLinePath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+
+
+
+
+
+                                <path
+                                    d={frontBodicePath}
+                                    fill="#faf8f5"
+                                    stroke="#222"
+                                    strokeWidth="1.5"
+                                    strokeLinejoin="round"
+                                />
+
+
+
+
+
+{/* 合印：前身頃 右脇 */}
+
+
+
+
+
+{/* 前身頃：中心線 */}
+
+{/* 前身頃：わ裁ちの表示 */}
+<g className="pattern-fold-mark">
+    <line
+        x1={0}
+        y1={frontTopY + neckCurvature + 8}
+        x2={0}
+        y2={frontBottomY}
+        stroke="#666"
+        strokeWidth="0.8"
+    />
+
+  <text
+    x={-12}
+    y={(frontTopY + frontBottomY) / 2}
+    textAnchor="middle"
+    fontSize={subFontSize}
+    fill="#555"
+>
+    わ
+</text>
+</g>
+
+
+
+
+
+
+
+
+
+
+<g
+    className="pattern-notch"
+    transform={`translate(${frontNotchX}, ${frontNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+
+
+
+
+
+                                <text x={halfW * 0.5} y={frontTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
+                                    {isSeparatedOnePiece ? "上半身前身頃 (わ)" : isTee ? "Tシャツ前身頃 (わ)" : "前身頃 (わ)"}
+                                </text>
+                                <text x={halfW * 0.5} y={frontTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">
+                                  わで1枚裁断 {isWoven ? "(布帛)" : ""}
+                                </text>
+
+
+
+
+{/* 寸法表示：前身頃 着丈 */}
+
+{/* 寸法表示：前身頃 半身幅 */}
+<g className="pattern-dimension">
+    <line
+        x1={0}
+        y1={frontWidthDimensionY}
+        x2={halfW}
+        y2={frontWidthDimensionY}
+        stroke="#666"
+        strokeWidth="0.6"
+    />
+
+    {[0, halfW].map((x) => (
+        <line
+            key={x}
+            x1={x}
+            y1={frontWidthDimensionY - 2}
+            x2={x}
+            y2={frontWidthDimensionY + 2}
+            stroke="#666"
+            strokeWidth="0.6"
+        />
+    ))}
+
+    <text
+        x={halfW / 2}
+        y={frontWidthDimensionY + dimensionFontSize + 4}
+        textAnchor="middle"
+        fontSize={dimensionFontSize}
+        fill="#555"
+    >
+        半身幅 {(halfW / scale).toFixed(1)}cm
+    </text>
+</g>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            </g>
+
+                            <g id="piece-back" transform={`translate(${patternRightX}, ${bodiceTopY})`}>
+                               
+{frontCutOffset > 0 && (
+    <path
+        d={backCutLinePath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+
+
+
+
+
+                                <path
+                                    d={backBodicePath}
+                                    fill="#faf8f5"
+                                    stroke="#222"
+                                    strokeWidth="1.5"
+                                    strokeLinejoin="round"
+                                />
+
+{/* 合印：後身頃 右脇 2個 */}
+
+
+
+
+
+
+{/* 後身頃：地の目線 */}
+<GrainlineMark
+    x={halfW * 0.48}
+    y1={backTopY + 15}
+    y2={backBottomY - 12}
+/>
+
+
+
+
+
+
+<g
+    className="pattern-notch"
+    transform={`translate(${backNotchX}, ${backNotchY})`}
+>
+    {/* 1個目 */}
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+
+    {/* 2個目 */}
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        transform={`translate(0, ${notchSize * 3.2})`}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+
+
+
+
+                                <text x={backTextX} y={backTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
+                                    {isSeparatedOnePiece ? "上半身後身頃" : isTee ? "Tシャツ後身頃" : "後身頃"}
+                                </text>
+                                <text x={backTextX} y={backTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">
+                                    左右2枚 (背開き) {isWoven ? "(布帛)" : ""}
+                                </text>
+                            </g>
+
+                            {collarType !== "襟なし" && (
+                                <g id="piece-collar" transform={`translate(${patternCenterX}, ${collarY})`}>
+                                    {[-1, 1].map((dir, idx) => (
+                                        <g key={idx} transform={`translate(${dir * (fCollarW + 4)}, 0) scale(${dir}, 1)`}>
+                                            {seamStrokeWidth > 0 && (
+                                                <path
+                                                    d={collarType === "角襟" ? flatPointedCollarPath : flatRoundCollarPath}
+                                                    fill="none"
+                                                    stroke="#c59c52"
+                                                    strokeWidth={seamStrokeWidth}
+                                                    strokeDasharray="4 2"
+                                                    strokeLinejoin="round"
+                                                />
+                                            )}
+                                            <path
+                                                d={collarType === "角襟" ? flatPointedCollarPath : flatRoundCollarPath}
+                                                fill="#faf8f5"
+                                                stroke="#222"
+                                                strokeWidth="1.2"
+                                                strokeLinejoin="round"
+                                            />
+                                        </g>
+                                    ))}
+                                    <text x="0" y={-cH - 10} textAnchor="middle" fontSize={titleFontSize * 0.9} className="pattern-label-title">{collarType}</text>
+                                    <text x="0" y={-cH - 2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">左右2枚裁断</text>
+                                </g>
+                            )}
+
+                            {isSeparatedOnePiece ? (
+                                <>
+                                    <g id="piece-skirt-sep" transform={`translate(${patternLeftX}, ${bottomPartsY + skirtPartH * 0.45})`}>
+                                       
+{frontCutOffset > 0 && (
+    <path
+        d={separatedSkirtCutPath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+
+                                        <path
+                                            d={separatedSkirtPath}
+                                            fill="#faf8f5"
+                                            stroke="#222"
+                                            strokeWidth="1.5"
+                                            strokeLinejoin="round"
+                                        />
+                                        <text x={0} y={skirtSepTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">
+                                            ふんわりスカート
+                                        </text>
+                                        <text x={0} y={skirtSepTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">前後2枚裁断</text>
+                                    </g>
+
+                                    {hasSleeve && (
+                                        <g id="piece-sleeve" transform={`translate(${patternRightX}, ${sleeveY})`}>
+                                         
+{frontCutOffset > 0 && (
+    <path
+        d={sleeveCutLinePath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+
+                                            <path
+                                                d={sleevePath}
+                                                fill="#faf8f5"
+                                                stroke="#222"
+                                                strokeWidth="1.5"
+                                                strokeLinejoin="round"
+                                            />
+
+
+
+
+
+{/* 合印：袖 前側 1個 */}
+
+
+
+
+
+{/* 袖：地の目線 */}
+<GrainlineMark
+    x={0}
+    y1={sleeveTopY + 12}
+    y2={sleeveBodyH / 2 - 8}
+/>
+
+
+
+
+
+
+
+
+<g
+    className="pattern-notch"
+    transform={`translate(${sleeveFrontNotchX}, ${sleeveNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+{/* 合印：袖 後側 2個 */}
+<g
+    className="pattern-notch"
+    transform={`translate(${sleeveBackNotchX}, ${sleeveNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        transform={`translate(0, ${notchSize * 3.2})`}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+
+
+
+
+
+                                            <text x={0} y={sleeveTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">袖</text>
+                                            <text x={0} y={sleeveTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">左右2枚裁断</text>
+
+
+
+
+
+{/* 寸法表示：袖丈 */}
+<text
+    x={0}
+
+
+
+    
+  y={sleeveBodyH / 2 + frontCutOffset + dimensionOffset + dimensionFontSize}
+
+
+
+
+
+
+    textAnchor="middle"
+    fontSize={dimensionFontSize}
+    fill="#555"
+>
+    袖丈 {sleeve.toFixed(1)}cm
+</text>
+
+
+
+
+
+
+
+
+                                        </g>
+                                    )}
+                                </>
+                            ) : (
+                                hasSleeve && (
+                                    <g id="piece-sleeve" transform={`translate(${patternCenterX}, ${normalSleeveY})`}>
+                                       
+{frontCutOffset > 0 && (
+    <path
+        d={sleeveCutLinePath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+
+                                        <path
+                                            d={sleevePath}
+                                            fill="#faf8f5"
+                                            stroke="#222"
+                                            strokeWidth="1.5"
+                                            strokeLinejoin="round"
+                                        />
+
+
+
+
+
+{/* 合印：袖 前側 1個 */}
+
+
+
+
+
+{/* 袖：地の目線 */}
+<GrainlineMark
+    x={0}
+    y1={sleeveTopY + 12}
+    y2={sleeveBodyH / 2 - 8}
+/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<g
+    className="pattern-notch"
+    transform={`translate(${sleeveFrontNotchX}, ${sleeveNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+{/* 合印：袖 後側 2個 */}
+<g
+    className="pattern-notch"
+    transform={`translate(${sleeveBackNotchX}, ${sleeveNotchY})`}
+>
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+
+    <path
+        d={`
+            M 0 ${-notchSize}
+            L ${-notchSize} 0
+            L 0 ${notchSize}
+        `}
+        transform={`translate(0, ${notchSize * 3.2})`}
+        fill="none"
+        stroke="#222"
+        strokeWidth="1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+</g>
+
+
+
+
+
+
+                                        <text x={0} y={sleeveTextY1} textAnchor="middle" fontSize={titleFontSize} className="pattern-label-title">袖</text>
+                                        <text x={0} y={sleeveTextY2} textAnchor="middle" fontSize={subFontSize} className="pattern-label-sub">左右2枚裁断</text>
+
+
+
+
+{/* 寸法表示：袖丈 */}
+<text
+    x={0}
+
+
+
+    y={sleeveBodyH / 2 + frontCutOffset + dimensionOffset + dimensionFontSize}
+
+
+
+
+
+    textAnchor="middle"
+    fontSize={dimensionFontSize}
+    fill="#555"
+>
+    袖丈 {sleeve.toFixed(1)}cm
+</text>
+
+
+
+
+
+
+
+
+
+                                    </g>
+                                )
+                            )}
+                        </>
+                    )}
+
+                    {category === "スカート" && (
+                        <g id="piece-skirt" transform={`translate(${patternCenterX}, ${skCenterY})`}>
+                         {frontCutOffset > 0 && (
+    <path
+        d={skirtCutPath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+                            <path
+                                d={skirtPath}
+                                fill="#faf8f5"
+                                stroke="#222"
+                                strokeWidth="1.5"
+                                strokeLinejoin="round"
+                            />
+                     
+                     
+                     
+                     
+                          <text
+    x={0}
+    y={skTopY - frontCutOffset - labelLineGap - 8}
+    textAnchor="middle"
+    fontSize={titleFontSize}
+    className="pattern-label-title"
+>
+    スカートパターン
+</text>
+<text
+    x={0}
+    y={skTopY - frontCutOffset - 8}
+    textAnchor="middle"
+    fontSize={subFontSize}
+    className="pattern-label-sub"
+>
+    前・後 2枚裁断 (わ裁ち)
+</text>
+
+
+
+
+                        </g>
+                    )}
+
+                    {category === "ボトムス" && (
+                        <g id="piece-pants" transform={`translate(${patternCenterX}, ${pCenterY})`}>
+                            <g transform={`translate(${-pantGap}, 0)`}>
+                              {frontCutOffset > 0 && (
+    <path
+        d={frontPantCutPath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+                                <path
+                                    d={frontPantPath}
+                                    fill="#faf8f5"
+                                    stroke="#222"
+                                    strokeWidth="1.5"
+                                    strokeLinejoin="round"
+                                />
+                              
+                              
+                              
+                              
+                              <text
+    x={0}
+    y={pY_top - frontCutOffset - labelLineGap - 8}
+    textAnchor="middle"
+    fontSize={titleFontSize}
+    className="pattern-label-title"
+>
+    前パンツ
+</text>
+
+<text
+    x={0}
+   y={pY_top - frontCutOffset - 8}
+    textAnchor="middle"
+    fontSize={subFontSize}
+    className="pattern-label-sub"
+>
+    左右2枚裁断
+</text>
+
+
+
+                            </g>
+
+                            <g transform={`translate(${pantGap}, 0)`}>
+                                {frontCutOffset > 0 && (
+    <path
+        d={backPantCutPath}
+        fill="none"
+        stroke="#c59c52"
+        strokeWidth="0.8"
+        strokeDasharray="3 2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+    />
+)}
+                                <path
+                                    d={backPantPath}
+                                    fill="#faf8f5"
+                                    stroke="#222"
+                                    strokeWidth="1.5"
+                                    strokeLinejoin="round"
+                                />
+                              
+                              
+                              
+                              
+                           <text
+    x={0}
+    y={pY_top - frontCutOffset - labelLineGap - 8}
+    textAnchor="middle"
+    fontSize={titleFontSize}
+    className="pattern-label-title"
+>
+    後パンツ
+</text>
+
+<text
+    x={0}
+    y={pY_top - frontCutOffset - 8}
+    textAnchor="middle"
+    fontSize={subFontSize}
+    className="pattern-label-sub"
+>
+    左右2枚裁断
+</text>
+
+
+
+                            </g>
+                        </g>
+                    )}
+                </g>
+            )}
+        </svg>
+    );
+}

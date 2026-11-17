@@ -527,6 +527,20 @@ const frontCutLinePath = (() => {
 
     const backOverlap = 6;
     
+// 上下切替ワンピース：後身頃の裾幅を確認
+if (isSeparatedOnePiece && !isOverlayMode) {
+  const backHemRightX = halfW - actualWaistIndent * 0.4;
+  const backHemLeftX = -backOverlap;
+
+  console.log("後身頃の裾幅・実座標チェック", {
+    size,
+    overlapCm: (backOverlap / scale).toFixed(2),
+    backHemFullCm: ((backHemRightX - backHemLeftX) / scale).toFixed(2),
+    backHemWithoutOverlapCm: (backHemRightX / scale).toFixed(2),
+  });
+}
+
+
     const backBodicePath = isSeparatedOnePiece ? `
         M 0 ${-(bodiceH * 0.5)}
         L ${neckHalfW} ${-(bodiceH * 0.5) + 3}
